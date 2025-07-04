@@ -7,188 +7,149 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to right, #1e3c72, #2a5298);
-      color: #ffffff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px;
-    }
-
-    .container {
-      background: #121212;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-      max-width: 400px;
-      width: 100%;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1a2a6c, #1a3c78);
+      color: #fff;
       text-align: center;
+      margin: 0;
+      padding: 2rem;
     }
-
-    select, input, button {
+    .container {
+      background-color: #111;
+      padding: 2rem;
+      border-radius: 10px;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    input, select, button {
       width: 100%;
-      margin-top: 10px;
       padding: 10px;
-      border-radius: 6px;
+      margin-top: 10px;
+      border-radius: 5px;
       border: none;
-      font-size: 16px;
     }
-
     button {
-      background-color: #1db954;
-      color: white;
+      background-color: #0f0;
+      color: #000;
       font-weight: bold;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
-
-    button:hover {
-      background-color: #17a446;
+    .result, .chart-container {
+      margin-top: 1rem;
     }
-
-    .output, .chart-container {
-      margin-top: 20px;
-      text-align: center;
-    }
-
-    .chart-container {
-      background: #1f1f1f;
-      border-radius: 8px;
-      padding: 20px;
-    }
-
     canvas {
-      max-width: 100%;
+      background-color: #222;
+      border-radius: 8px;
+      padding: 1rem;
     }
   </style>
 </head>
 <body>
   <h1>Currency Arbitrage Tool</h1>
   <div class="container">
-    <label>From currency:</label>
     <select id="fromCurrency"></select>
-
-    <label>Via currency (optional):</label>
-    <select id="viaCurrency">
-      <option value="">--None--</option>
-    </select>
-
-    <label>To currency:</label>
+    <select id="viaCurrency"></select>
     <select id="toCurrency"></select>
-
-    <label>Amount:</label>
-    <input type="number" id="amount" value="1000" />
-
-    <label>Conversion Fee % (per step):</label>
-    <input type="number" id="fee" value="0" />
-
+    <input type="number" id="amount" placeholder="Amount" value="1000" />
+    <input type="number" id="fee" placeholder="Conversion Fee % (per step)" value="1" step="0.01" />
     <button onclick="calculateArbitrage()">Convert</button>
-
-    <div class="output" id="resultDisplay"></div>
+    <div class="result" id="result"></div>
   </div>
 
   <div class="chart-container">
-    <h3>Conversion Breakdown</h3>
-    <canvas id="conversionChart"></canvas>
+    <canvas id="conversionChart" width="400" height="200"></canvas>
   </div>
 
   <script>
-    const currencies = ['USD', 'EUR', 'CAD', 'DKK', 'JPY', 'AUD'];
-    const apiBase = 'https://api.frankfurter.app/latest';
-
-    const fromSelect = document.getElementById('fromCurrency');
-    const toSelect = document.getElementById('toCurrency');
-    const viaSelect = document.getElementById('viaCurrency');
-    const resultDisplay = document.getElementById('resultDisplay');
+    const fromSelect = document.getElementById("fromCurrency");
+    const viaSelect = document.getElementById("viaCurrency");
+    const toSelect = document.getElementById("toCurrency");
+    const resultDiv = document.getElementById("result");
+    const currencies = ["USD", "CAD", "DKK", "EUR", "JPY", "AUD", "NOK"];
 
     currencies.forEach(cur => {
-      fromSelect.innerHTML += `<option value="${cur}">${cur}</option>`;
-      toSelect.innerHTML += `<option value="${cur}">${cur}</option>`;
-      if (cur !== '') viaSelect.innerHTML += `<option value="${cur}">${cur}</option>`;
+      [fromSelect, viaSelect, toSelect].forEach(sel => {
+        const opt = document.createElement("option");
+        opt.value = cur;
+        opt.textContent = cur;
+        sel.appendChild(opt.cloneNode(true));
+      });
     });
 
-    let chart;
+    const ctx = document.getElementById("conversionChart").getContext("2d");
+    let chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Conversion Progress',
+          data: [],
+          borderColor: '#0f0',
+          backgroundColor: 'rgba(0,255,0,0.1)',
+          fill: true
+        }]
+      },
+      options: {
+        scales: {
+          x: { title: { display: true, text: 'Currency' } },
+          y: { title: { display: true, text: 'Amount' } }
+        }
+      }
+    });
 
-    async function fetchRate(from, to) {
-      if (from === to) return 1;
-      const res = await fetch(`${apiBase}?from=${from}&to=${to}`);
+    async function getRate(from, to) {
+      const res = await fetch(`https://api.exchangerate.host/convert?from=${from}&to=${to}`);
       const data = await res.json();
-      return data.rates[to];
+      return data.result;
     }
 
     async function calculateArbitrage() {
       const from = fromSelect.value;
       const via = viaSelect.value;
       const to = toSelect.value;
-      const amount = parseFloat(document.getElementById('amount').value);
-      const feePct = parseFloat(document.getElementById('fee').value) / 100;
+      const amount = parseFloat(document.getElementById("amount").value);
+      const fee = parseFloat(document.getElementById("fee").value) / 100;
 
-      let intermediate = amount;
-      let labels = [from];
-      let values = [amount];
+      let steps = [from];
+      let amounts = [amount];
+      let finalAmount = amount;
 
-      if (via) {
-        const rate1 = await fetchRate(from, via);
-        intermediate = amount * rate1 * (1 - feePct);
-        labels.push(via);
-        values.push(intermediate);
+      if (via && via !== from && via !== to) {
+        const r1 = await getRate(from, via);
+        finalAmount *= r1 * (1 - fee);
+        steps.push(via);
+        amounts.push(finalAmount);
 
-        const rate2 = await fetchRate(via, to);
-        intermediate = intermediate * rate2 * (1 - feePct);
-        labels.push(to);
-        values.push(intermediate);
+        const r2 = await getRate(via, to);
+        finalAmount *= r2 * (1 - fee);
+        steps.push(to);
+        amounts.push(finalAmount);
       } else {
-        const rate = await fetchRate(from, to);
-        intermediate = intermediate * rate * (1 - feePct);
-        labels.push(to);
-        values.push(intermediate);
+        const r = await getRate(from, to);
+        finalAmount *= r * (1 - fee);
+        steps.push(to);
+        amounts.push(finalAmount);
       }
 
-      const profit = intermediate - amount;
-      const profitPct = (profit / amount) * 100;
+      const baseRate = await getRate(from, to);
+      const directAmount = amount * baseRate;
+      const profit = finalAmount - directAmount;
+      const profitPercent = ((profit / directAmount) * 100).toFixed(2);
 
-      resultDisplay.innerHTML = `${amount} ${from} → ${to} = ${intermediate.toFixed(2)} ${to}<br>Profit: ${profit.toFixed(2)} ${to} (${profitPct.toFixed(2)}%) after fees`;
-      drawChart(labels, values);
+      resultDiv.innerHTML = `
+        ${amount} ${from} → ${to} = ${finalAmount.toFixed(2)} ${to}<br>
+        Direct conversion: ${directAmount.toFixed(2)} ${to}<br>
+        Profit: ${profit.toFixed(2)} ${to} (${profitPercent}%) after fees
+      `;
+
+      chart.data.labels = steps;
+      chart.data.datasets[0].data = amounts;
+      chart.update();
     }
 
-    function drawChart(labels, data) {
-      const ctx = document.getElementById('conversionChart').getContext('2d');
-      if (chart) chart.destroy();
-
-      chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Conversion Progress',
-            data,
-            borderColor: '#1db954',
-            backgroundColor: 'rgba(29,185,84,0.2)',
-            tension: 0.3,
-            fill: true,
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: false,
-              ticks: { color: '#fff' },
-              grid: { color: '#444' }
-            },
-            x: {
-              ticks: { color: '#fff' },
-              grid: { color: '#444' }
-            }
-          },
-          plugins: {
-            legend: { labels: { color: '#fff' } }
-          }
-        }
-      });
-    }
+    viaSelect.innerHTML = '<option value="">-- None --</option>' + viaSelect.innerHTML;
+    fromSelect.value = 'USD';
+    toSelect.value = 'DKK';
   </script>
 </body>
 </html>
