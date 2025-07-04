@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Currency Arbitrage Tool</title>
   <style>
     body {
@@ -18,13 +18,14 @@
     h1 {
       margin-bottom: 20px;
     }
-    .container {
+    .container, .arbitrage, .best-route {
       background: #111;
       padding: 25px;
       border-radius: 12px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
       width: 100%;
-      max-width: 500px;
+      max-width: 400px;
+      margin-bottom: 20px;
     }
     label {
       font-size: 0.9rem;
@@ -57,7 +58,7 @@
     button:hover {
       background-color: #00b359;
     }
-    .result, .profit, .top-arb, .top-routes {
+    .result, .profit, .output {
       margin-top: 15px;
       text-align: center;
       font-size: 1rem;
@@ -66,6 +67,7 @@
 </head>
 <body>
   <h1>Currency Arbitrage Tool</h1>
+
   <div class="container">
     <label for="from">From Currency</label>
     <select id="from"></select>
@@ -88,30 +90,47 @@
 
     <div class="result" id="result"></div>
     <div class="profit" id="profit"></div>
-    <div class="top-arb" id="topArb"></div>
-    <div class="top-routes" id="topRoutes"></div>
+  </div>
+
+  <div class="arbitrage">
+    <h3>Top Arbitrage Opportunity</h3>
+    <div class="output" id="topArbitrage"></div>
+  </div>
+
+  <div class="best-route">
+    <h3>Best 3-Currency Route</h3>
+    <label for="routeFrom">Buy in:</label>
+    <select id="routeFrom"></select>
+
+    <label for="routeTo">Sell in:</label>
+    <select id="routeTo"></select>
+
+    <button onclick="findBestRoute()">Find Best Route</button>
+    <div class="output" id="bestRoute"></div>
   </div>
 
   <script>
     const currencies = ["USD", "CAD", "DKK", "EUR", "NOK", "SEK", "GBP", "JPY", "CHF"];
+
     const fromSelect = document.getElementById("from");
     const toSelect = document.getElementById("to");
     const viaSelect = document.getElementById("via");
+    const routeFrom = document.getElementById("routeFrom");
+    const routeTo = document.getElementById("routeTo");
 
     currencies.forEach(cur => {
       fromSelect.innerHTML += `<option value="${cur}">${cur}</option>`;
       toSelect.innerHTML += `<option value="${cur}">${cur}</option>`;
       viaSelect.innerHTML += `<option value="${cur}">${cur}</option>`;
+      routeFrom.innerHTML += `<option value="${cur}">${cur}</option>`;
+      routeTo.innerHTML += `<option value="${cur}">${cur}</option>`;
     });
 
-    fromSelect.value = "USD";
-    toSelect.value = "DKK";
-
-    async function getRate(base, target) {
-      if (base === target) return 1;
-      const res = await fetch(`https://api.frankfurter.app/latest?amount=1&from=${base}&to=${target}`);
+    async function getRate(from, to) {
+      if (from === to) return 1;
+      const res = await fetch(`https://api.frankfurter.app/latest?amount=1&from=${from}&to=${to}`);
       const data = await res.json();
-      return data.rates[target];
+      return data.rates[to];
     }
 
     async function calculate() {
@@ -121,77 +140,72 @@
       const amount = parseFloat(document.getElementById("amount").value);
       const fee = parseFloat(document.getElementById("fee").value) / 100;
 
-      if (!from || !to || from === to || amount <= 0) {
-        document.getElementById("result").textContent = "Invalid input.";
-        return;
-      }
-
       let finalAmount;
-
-      try {
-        if (via) {
-          const rate1 = await getRate(from, via);
-          const rate2 = await getRate(via, to);
-          const step1 = amount * rate1 * (1 - fee);
-          finalAmount = step1 * rate2 * (1 - fee);
-        } else {
-          const rate = await getRate(from, to);
-          finalAmount = amount * rate * (1 - fee);
-        }
-
-        const dkkRate = await getRate(from, "DKK");
-        const baseInDKK = amount * dkkRate;
-        const profitDKK = finalAmount - baseInDKK;
-        const profitPct = (profitDKK / baseInDKK) * 100;
-
-        document.getElementById("result").innerHTML = `${amount} ${from} = ${finalAmount.toFixed(2)} ${to}`;
-        document.getElementById("profit").innerHTML = `Profit: ${profitDKK.toFixed(2)} DKK (${profitPct.toFixed(2)}%)`;
-
-        showTopArbitrage(amount, fee);
-      } catch (err) {
-        document.getElementById("result").textContent = "Error fetching data.";
-        document.getElementById("profit").textContent = "";
+      if (via) {
+        const rate1 = await getRate(from, via);
+        const rate2 = await getRate(via, to);
+        const step1 = amount * rate1 * (1 - fee);
+        finalAmount = step1 * rate2 * (1 - fee);
+      } else {
+        const rate = await getRate(from, to);
+        finalAmount = amount * rate * (1 - fee);
       }
+
+      const dkkRate = await getRate(from, "DKK");
+      const baseInDKK = amount * dkkRate;
+      const profitDKK = finalAmount - baseInDKK;
+      const profitPct = (profitDKK / baseInDKK) * 100;
+
+      document.getElementById("result").textContent = `${amount} ${from} = ${finalAmount.toFixed(2)} ${to}`;
+      document.getElementById("profit").textContent = `Profit: ${profitDKK.toFixed(2)} DKK (${profitPct.toFixed(2)}%)`;
     }
 
-    async function showTopArbitrage(amount, fee) {
-      let bestProfit = -Infinity;
-      let bestPath = "";
-      let top3 = [];
+    async function findBestRoute() {
+      const base = routeFrom.value;
+      const target = routeTo.value;
+      const fee = parseFloat(document.getElementById("fee").value) / 100;
+      let best = { gain: -Infinity, path: "" };
 
-      for (let from of currencies) {
-        for (let via of currencies) {
-          if (via === from) continue;
-          for (let to of currencies) {
-            if (to === from || to === via) continue;
-            try {
-              const r1 = await getRate(from, via);
-              const r2 = await getRate(via, to);
-              const result = amount * r1 * (1 - fee) * r2 * (1 - fee);
-              const dkkRate = await getRate(from, "DKK");
-              const baseInDKK = amount * dkkRate;
-              const profitDKK = result - baseInDKK;
-              const profitPct = (profitDKK / baseInDKK) * 100;
+      for (let mid of currencies) {
+        if (mid === base || mid === target) continue;
+        const r1 = await getRate(base, mid);
+        const r2 = await getRate(mid, target);
+        const step1 = 1 * r1 * (1 - fee);
+        const step2 = step1 * r2 * (1 - fee);
+        if (step2 > best.gain) {
+          best = { gain: step2, path: `${base} → ${mid} → ${target}`, profitPct: ((step2 - (await getRate(base, target))) / (await getRate(base, target))) * 100 };
+        }
+      }
+      document.getElementById("bestRoute").textContent = `${best.path} = ${best.gain.toFixed(4)} (Gain: ${best.profitPct.toFixed(2)}%)`;
+    }
 
-              if (profitDKK > bestProfit) {
-                bestProfit = profitDKK;
-                bestPath = `${from} → ${via} → ${to} = ${result.toFixed(2)} (${profitDKK.toFixed(2)} DKK profit, ${profitPct.toFixed(2)}%)`;
-              }
+    async function findTopArbitrage() {
+      let best = { profit: -Infinity, path: "" };
+      const fee = parseFloat(document.getElementById("fee").value) / 100;
 
-              top3.push({ path: `${from} → ${via} → ${to}`, result, profitDKK, profitPct });
-            } catch (err) {
-              continue;
+      for (let a of currencies) {
+        for (let b of currencies) {
+          for (let c of currencies) {
+            if (new Set([a, b, c]).size < 3) continue;
+            const ab = await getRate(a, b);
+            const bc = await getRate(b, c);
+            const ca = await getRate(c, a);
+            const result = 1 * ab * (1 - fee) * bc * (1 - fee) * ca * (1 - fee);
+            if (result > best.profit) {
+              best = { profit: result, path: `${a} → ${b} → ${c} → ${a}`, profitPct: (result - 1) * 100 };
             }
           }
         }
       }
-
-      top3.sort((a, b) => b.profitDKK - a.profitDKK);
-      const topThreeText = top3.slice(0, 3).map(r => `${r.path}: ${r.result.toFixed(2)} (Profit: ${r.profitDKK.toFixed(2)} DKK, ${r.profitPct.toFixed(2)}%)`).join("<br>");
-
-      document.getElementById("topArb").innerHTML = `<b>Top Arbitrage:</b><br>${bestPath}`;
-      document.getElementById("topRoutes").innerHTML = `<b>Best 3 Currency Routes:</b><br>${topThreeText}`;
+      document.getElementById("topArbitrage").textContent = `${best.path} (Profit: ${(best.profit - 1).toFixed(4)} | ${best.profitPct.toFixed(2)}%)`;
     }
+
+    // Defaults and start
+    fromSelect.value = "USD";
+    toSelect.value = "DKK";
+    routeFrom.value = "USD";
+    routeTo.value = "DKK";
+    findTopArbitrage();
   </script>
 </body>
 </html>
