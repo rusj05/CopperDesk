@@ -70,6 +70,16 @@
       margin-top: 20px;
       max-width: 600px;
     }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 8px;
+      border: 1px solid #555;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -105,6 +115,31 @@
 
   <canvas id="priceChart" width="600" height="300"></canvas>
 
+  <div class="container">
+    <h3>📒 Position Tracker</h3>
+    <button onclick="savePosition()">Save Position</button>
+    <table id="positions">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Qty</th>
+          <th>Cost</th>
+          <th>Sell</th>
+          <th>P/L</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="container">
+    <h3>📄 Quote Generator</h3>
+    <label for="client">Client Name</label>
+    <input type="text" id="client" />
+    <button onclick="generateQuote()">Download Quote PDF</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     const currencies = ["USD", "CAD", "DKK", "EUR", "GBP", "JPY", "NOK", "SEK"];
     const currencySelect = document.getElementById("currency");
@@ -128,9 +163,9 @@
       try {
         const res = await fetch('https://api.metalpriceapi.com/v1/latest?base=USD&symbols=USDxCU');
         const data = await res.json();
-        return data.rates['USDxCU'] * 32150; // Convert from troy ounces to tonnes
+        return data.rates['USDxCU'] * 32150;
       } catch (_) {
-        return 8300; // fallback
+        return 8300;
       }
     }
 
@@ -161,7 +196,7 @@
       return { rate: best, route };
     }
 
-    async function calculate() {
+    async function calculate(save = false) {
       const to = currencySelect.value;
       const qty = parseFloat(document.getElementById("quantity").value) || 0;
       const fee = parseFloat(document.getElementById("fee").value) / 100 || 0;
@@ -186,6 +221,30 @@
         `Potential Profit: ${profit.toFixed(2)} ${to}<br>` +
         `Margin: ${margin.toFixed(2)}%<br>` +
         `Best FX Route: ${route}`;
+
+      if (save) {
+        const table = document.getElementById("positions").querySelector("tbody");
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${new Date().toLocaleDateString()}</td><td>${qty}</td><td>${totalCost.toFixed(2)}</td><td>${sell}</td><td>${profit.toFixed(2)}</td>`;
+        table.appendChild(row);
+      }
+    }
+
+    function savePosition() {
+      calculate(true);
+    }
+
+    function generateQuote() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const client = document.getElementById("client").value || "Client";
+      const details = document.getElementById("results").innerText;
+      doc.setFontSize(14);
+      doc.text(`Quote for ${client}`, 10, 20);
+      doc.setFontSize(10);
+      const lines = doc.splitTextToSize(details, 180);
+      doc.text(lines, 10, 40);
+      doc.save(`Quote_${client}.pdf`);
     }
 
     async function drawChart() {
@@ -214,8 +273,8 @@
       });
     }
 
-    document.getElementById("calcBtn").addEventListener("click", calculate);
-    currencySelect.addEventListener("change", calculate);
+    document.getElementById("calcBtn").addEventListener("click", () => calculate());
+    currencySelect.addEventListener("change", () => calculate());
     calculate();
     drawChart();
   </script>
