@@ -10,20 +10,19 @@
       font-family: 'Segoe UI', sans-serif;
       background: #214d9b;
       color: #fff;
-      padding: 40px;
+      padding: 20px;
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       gap: 20px;
-      justify-content: center;
-      flex-wrap: wrap;
+      align-items: center;
     }
-    .panel, .chart-container, .tips-panel {
+    .panel, .chart-container, .tips-container {
       background: #111;
-      padding: 25px;
+      padding: 20px;
       border-radius: 12px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      max-width: 500px;
       width: 100%;
+      max-width: 480px;
     }
     h1, h2 {
       margin-bottom: 20px;
@@ -65,7 +64,17 @@
     }
     canvas {
       width: 100% !important;
-      height: 400px !important;
+      height: auto !important;
+    }
+    @media (min-width: 768px) {
+      body {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .panel, .chart-container, .tips-container {
+        max-width: 480px;
+      }
     }
   </style>
 </head>
@@ -80,27 +89,27 @@
     <label>Sell Currency (Currency you sell copper in)</label>
     <select id="sellCurrency"></select>
 
-    <div id="exchangeRate">Exchange Rate (buy → sell): loading...</div>
+    <div id="fxRate">Exchange Rate (buy → sell): loading...</div>
 
-    <label>Purchase Price per tonne (in buy currency)</label>
+    <label>Purchase Price per tonne (in Buy Currency)</label>
     <input type="number" id="purchasePrice" value="8200" min="0" />
 
     <label>Quantity (tonnes)</label>
     <input type="number" id="quantity" value="1" min="0" />
 
-    <label title="Rate from buy → sell currency, e.g., 7.54">Bank Conversion Rate (Buy → Sell Currency)</label>
+    <label>Bank Conversion Rate (Buy → Sell Currency)</label>
     <input type="number" id="bankRate" value="0" min="0" step="0.0001" />
 
-    <label>Selling Price per tonne (in sell currency)</label>
+    <label>Selling Price per tonne (in Sell Currency)</label>
     <input type="number" id="sellPrice" value="0" min="0" />
 
-    <label>Freight per tonne (in sell currency)</label>
+    <label>Freight per tonne (in Sell Currency)</label>
     <input type="number" id="freight" value="0" min="0" />
 
-    <label>Insurance per tonne (in sell currency)</label>
+    <label>Insurance per tonne (in Sell Currency)</label>
     <input type="number" id="insurance" value="0" min="0" />
 
-    <label>Import Duty per tonne (in sell currency)</label>
+    <label>Import Duty per tonne (in Sell Currency)</label>
     <input type="number" id="duty" value="0" min="0" />
 
     <button id="calcBtn">Calculate</button>
@@ -113,7 +122,7 @@
     <canvas id="copperChart"></canvas>
   </div>
 
-  <div class="tips-panel">
+  <div class="tips-container">
     <h2>Currency Tips</h2>
     <p>The live copper price shown above reflects the market value in USD per metric tonne. Use your bank’s provided FX rate to calculate your actual costs. If you’re buying in one currency and selling in another, enter the rate your bank offers for converting between them. Use the breakeven rate as a guide to ensure profitability.</p>
   </div>
