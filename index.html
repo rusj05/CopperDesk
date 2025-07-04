@@ -81,6 +81,9 @@
     <label>Amount:</label>
     <input type="number" id="amount" value="1000" />
 
+    <label>Conversion Fee % (per step):</label>
+    <input type="number" id="fee" value="0" />
+
     <button onclick="calculateArbitrage()">Convert</button>
 
     <div class="output" id="resultDisplay"></div>
@@ -120,6 +123,7 @@
       const via = viaSelect.value;
       const to = toSelect.value;
       const amount = parseFloat(document.getElementById('amount').value);
+      const feePct = parseFloat(document.getElementById('fee').value) / 100;
 
       let intermediate = amount;
       let labels = [from];
@@ -127,22 +131,25 @@
 
       if (via) {
         const rate1 = await fetchRate(from, via);
-        intermediate = amount * rate1;
+        intermediate = amount * rate1 * (1 - feePct);
         labels.push(via);
         values.push(intermediate);
 
         const rate2 = await fetchRate(via, to);
-        intermediate *= rate2;
+        intermediate = intermediate * rate2 * (1 - feePct);
         labels.push(to);
         values.push(intermediate);
       } else {
         const rate = await fetchRate(from, to);
-        intermediate *= rate;
+        intermediate = intermediate * rate * (1 - feePct);
         labels.push(to);
         values.push(intermediate);
       }
 
-      resultDisplay.innerHTML = `${amount} ${from} → ${to} = ${intermediate.toFixed(2)} ${to}`;
+      const profit = intermediate - amount;
+      const profitPct = (profit / amount) * 100;
+
+      resultDisplay.innerHTML = `${amount} ${from} → ${to} = ${intermediate.toFixed(2)} ${to}<br>Profit: ${profit.toFixed(2)} ${to} (${profitPct.toFixed(2)}%) after fees`;
       drawChart(labels, values);
     }
 
