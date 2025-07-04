@@ -7,40 +7,54 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #1a2a6c, #1a3c78);
-      color: #fff;
-      text-align: center;
       margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #1e3c72, #2a5298);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       padding: 2rem;
     }
     .container {
-      background-color: #111;
+      background: #111;
       padding: 2rem;
-      border-radius: 10px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
       max-width: 400px;
-      margin: 0 auto;
-    }
-    input, select, button {
       width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 5px;
+      text-align: center;
+    }
+    select, input {
+      width: 100%;
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      border-radius: 6px;
       border: none;
+      font-size: 1rem;
     }
     button {
-      background-color: #0f0;
-      color: #000;
-      font-weight: bold;
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
       cursor: pointer;
     }
-    .result, .chart-container {
-      margin-top: 1rem;
+    button:hover {
+      background-color: #218838;
     }
-    canvas {
-      background-color: #222;
-      border-radius: 8px;
+    .output, .profit {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    .chart-container {
+      margin-top: 2rem;
+      background: #222;
       padding: 1rem;
+      border-radius: 10px;
     }
   </style>
 </head>
@@ -50,10 +64,11 @@
     <select id="fromCurrency"></select>
     <select id="viaCurrency"></select>
     <select id="toCurrency"></select>
-    <input type="number" id="amount" placeholder="Amount" value="1000" />
-    <input type="number" id="fee" placeholder="Conversion Fee % (per step)" value="1" step="0.01" />
-    <button onclick="calculateArbitrage()">Convert</button>
-    <div class="result" id="result"></div>
+    <input type="number" id="amount" value="1000" placeholder="Amount" />
+    <input type="number" id="fee" value="1" placeholder="Fee per conversion (%)" step="0.01" />
+    <button onclick="convert()">Convert</button>
+    <div class="output" id="output"></div>
+    <div class="profit" id="profit"></div>
   </div>
 
   <div class="chart-container">
@@ -61,95 +76,87 @@
   </div>
 
   <script>
-    const fromSelect = document.getElementById("fromCurrency");
-    const viaSelect = document.getElementById("viaCurrency");
-    const toSelect = document.getElementById("toCurrency");
-    const resultDiv = document.getElementById("result");
-    const currencies = ["USD", "CAD", "DKK", "EUR", "JPY", "AUD", "NOK"];
+    const currencies = ["USD", "EUR", "DKK", "CAD", "JPY", "AUD", "NOK"];
 
     currencies.forEach(cur => {
-      [fromSelect, viaSelect, toSelect].forEach(sel => {
+      ["fromCurrency", "viaCurrency", "toCurrency"].forEach(id => {
         const opt = document.createElement("option");
-        opt.value = cur;
-        opt.textContent = cur;
-        sel.appendChild(opt.cloneNode(true));
+        opt.value = opt.text = cur;
+        document.getElementById(id).appendChild(opt.cloneNode(true));
       });
     });
+    document.getElementById("viaCurrency").prepend(new Option("-- None --", ""));
 
-    const ctx = document.getElementById("conversionChart").getContext("2d");
-    let chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Conversion Progress',
-          data: [],
-          borderColor: '#0f0',
-          backgroundColor: 'rgba(0,255,0,0.1)',
-          fill: true
-        }]
-      },
-      options: {
-        scales: {
-          x: { title: { display: true, text: 'Currency' } },
-          y: { title: { display: true, text: 'Amount' } }
-        }
-      }
-    });
-
-    async function getRate(from, to) {
-      const res = await fetch(`https://api.exchangerate.host/convert?from=${from}&to=${to}`);
+    async function fetchRate(from, to) {
+      const res = await fetch(`https://api.frankfurter.app/latest?amount=1&from=${from}&to=${to}`);
       const data = await res.json();
-      return data.result;
+      return data.rates[to];
     }
 
-    async function calculateArbitrage() {
-      const from = fromSelect.value;
-      const via = viaSelect.value;
-      const to = toSelect.value;
+    async function convert() {
+      const from = document.getElementById("fromCurrency").value;
+      const via = document.getElementById("viaCurrency").value;
+      const to = document.getElementById("toCurrency").value;
       const amount = parseFloat(document.getElementById("amount").value);
       const fee = parseFloat(document.getElementById("fee").value) / 100;
 
-      let steps = [from];
-      let amounts = [amount];
-      let finalAmount = amount;
+      let convertedAmount = amount;
+      let route = [from];
+      let steps = [];
 
-      if (via && via !== from && via !== to) {
-        const r1 = await getRate(from, via);
-        finalAmount *= r1 * (1 - fee);
-        steps.push(via);
-        amounts.push(finalAmount);
-
-        const r2 = await getRate(via, to);
-        finalAmount *= r2 * (1 - fee);
-        steps.push(to);
-        amounts.push(finalAmount);
+      if (via) {
+        const rate1 = await fetchRate(from, via);
+        const rate2 = await fetchRate(via, to);
+        convertedAmount = amount * rate1 * (1 - fee) * rate2 * (1 - fee);
+        route.push(via);
+        steps = [amount * rate1 * (1 - fee), convertedAmount];
       } else {
-        const r = await getRate(from, to);
-        finalAmount *= r * (1 - fee);
-        steps.push(to);
-        amounts.push(finalAmount);
+        const rate = await fetchRate(from, to);
+        convertedAmount = amount * rate * (1 - fee);
+        steps = [convertedAmount];
       }
+      route.push(to);
 
-      const baseRate = await getRate(from, to);
-      const directAmount = amount * baseRate;
-      const profit = finalAmount - directAmount;
-      const profitPercent = ((profit / directAmount) * 100).toFixed(2);
+      const directRate = await fetchRate(from, to);
+      const directConverted = amount * directRate * (1 - fee);
+      const profit = convertedAmount - directConverted;
+      const profitPct = ((profit / directConverted) * 100).toFixed(2);
 
-      resultDiv.innerHTML = `
-        ${amount} ${from} → ${to} = ${finalAmount.toFixed(2)} ${to}<br>
-        Direct conversion: ${directAmount.toFixed(2)} ${to}<br>
-        Profit: ${profit.toFixed(2)} ${to} (${profitPercent}%) after fees
-      `;
+      document.getElementById("output").textContent = `${amount} ${from} → ${to} = ${convertedAmount.toFixed(2)} ${to}`;
+      document.getElementById("profit").textContent = `Profit: ${profit.toFixed(2)} ${to} (${profitPct}%) after fees`;
 
-      chart.data.labels = steps;
-      chart.data.datasets[0].data = amounts;
-      chart.update();
+      renderChart(route, [amount, ...steps]);
     }
 
-    viaSelect.innerHTML = '<option value="">-- None --</option>' + viaSelect.innerHTML;
-    fromSelect.value = 'USD';
-    toSelect.value = 'DKK';
+    let chart;
+    function renderChart(labels, data) {
+      const ctx = document.getElementById("conversionChart").getContext("2d");
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "Conversion Progress",
+            data,
+            fill: false,
+            borderColor: "#4caf50",
+            tension: 0.1
+          }]
+        },
+        options: {
+          plugins: {
+            legend: {
+              labels: { color: "#fff" }
+            }
+          },
+          scales: {
+            x: { ticks: { color: "#fff" } },
+            y: { ticks: { color: "#fff" } }
+          }
+        }
+      });
+    }
   </script>
 </body>
 </html>
