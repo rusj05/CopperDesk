@@ -2,231 +2,163 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Currency Arbitrage Tool</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f4f7fa;
+      background: linear-gradient(to right, #bdc3c7, #2c3e50);
+      margin: 0;
+      padding: 20px;
       color: #333;
-      padding: 40px 20px;
-    }
-    h1, h3 {
-      text-align: center;
-      color: #2c3e50;
     }
     .container {
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    .box {
-      background: #ffffff;
-      padding: 25px;
+      max-width: 800px;
+      margin: auto;
+      background: white;
       border-radius: 10px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
     }
-    label, select, input, button {
+    h1 {
+      text-align: center;
+    }
+    select, input[type="number"], button {
       width: 100%;
       padding: 10px;
-      margin-top: 10px;
-      margin-bottom: 20px;
+      margin: 10px 0;
       border-radius: 5px;
       border: 1px solid #ccc;
-      font-size: 16px;
     }
     button {
-      background-color: #3498db;
+      background-color: #2980b9;
       color: white;
-      border: none;
+      font-weight: bold;
       cursor: pointer;
     }
-    button:hover {
-      background-color: #2980b9;
-    }
-    .result {
+    .result, .arbitrage-result {
       text-align: center;
+      margin-top: 15px;
       font-weight: bold;
-      font-size: 18px;
     }
     canvas {
-      max-width: 100%;
-      height: auto;
+      margin-top: 30px;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Currency Arbitrage Tool</h1>
-
-    <div class="box">
-      <label>From currency:</label>
-      <select id="from"></select>
-
-      <label>To currency:</label>
-      <select id="to"></select>
-
-      <label>Amount:</label>
-      <input type="number" id="amount" value="1000"/>
-
-      <button onclick="calculate()">Convert</button>
-      <div class="result" id="conversionResult"></div>
-    </div>
-
-    <div class="box">
-      <h3>Top Arbitrage Opportunity</h3>
-      <div class="result" id="topArb">Loading...</div>
-    </div>
-
-    <div class="box">
-      <h3>Best 3-Currency Route</h3>
-      <label>Buy in:</label>
-      <select id="filterFrom"></select>
-      <label>Sell in:</label>
-      <select id="filterTo"></select>
-      <button onclick="suggestMiddle()">Find Best Middle Currency</button>
-      <div class="result" id="filterResult"></div>
-    </div>
-
-    <div class="box">
-      <h3>Arbitrage Visual</h3>
-      <canvas id="arbChart"></canvas>
-    </div>
+    <select id="fromCurrency"></select>
+    <select id="toCurrency"></select>
+    <input type="number" id="amount" value="1000" placeholder="Amount" />
+    <button onclick="calculateArbitrage()">Convert</button>
+    <div class="result" id="conversionResult"></div>
+    <div class="arbitrage-result" id="arbitrageInfo"></div>
+    <canvas id="arbitrageChart" height="200"></canvas>
   </div>
 
   <script>
-    const currencies = ["CAD", "DKK", "USD", "NOK", "EUR", "GBP", "JPY", "CHF", "SEK", "AUD"];
-    const populate = (id) => {
-      const el = document.getElementById(id);
-      currencies.forEach(curr => {
-        el.innerHTML += `<option value="${curr}">${curr}</option>`;
-      });
-    };
-    ["from", "to", "filterFrom", "filterTo"].forEach(populate);
+    const currencyList = ["USD", "CAD", "DKK", "EUR", "JPY", "AUD"];
+    const fromCurrency = document.getElementById('fromCurrency');
+    const toCurrency = document.getElementById('toCurrency');
 
-    async function fetchRate(base, target) {
-      if (base === target) return 1;
-      const res = await fetch(`https://api.frankfurter.app/latest?amount=1&from=${base}&to=${target}`);
+    currencyList.forEach(curr => {
+      fromCurrency.innerHTML += `<option value="${curr}">${curr}</option>`;
+      toCurrency.innerHTML += `<option value="${curr}">${curr}</option>`;
+    });
+
+    let rates = {};
+
+    async function fetchRates() {
+      const res = await fetch('https://api.frankfurter.app/latest?from=USD');
       const data = await res.json();
-      return data.rates[target];
+      rates = data.rates;
+      rates["USD"] = 1.0;
     }
 
-    async function calculate() {
-      const from = document.getElementById("from").value;
-      const to = document.getElementById("to").value;
-      const amount = parseFloat(document.getElementById("amount").value);
-      const rate = await fetchRate(from, to);
-      const result = amount * rate;
+    async function calculateArbitrage() {
+      await fetchRates();
+
+      const from = fromCurrency.value;
+      const to = toCurrency.value;
+      const amount = parseFloat(document.getElementById('amount').value);
+
+      if (!rates[from] || !rates[to]) {
+        document.getElementById("conversionResult").innerText = 'Invalid conversion.';
+        return;
+      }
+
+      const usdToFrom = 1 / rates[from];
+      const usdToTo = 1 / rates[to];
+
+      const result = amount * (usdToTo / usdToFrom);
       document.getElementById("conversionResult").innerText = `${amount} ${from} = ${result.toFixed(2)} ${to}`;
-    }
 
-    async function findTopArbitrage() {
-      let top = "";
-      let topProfit = 0;
-      const base = 1000;
-      let bestRoute = [];
-      let bestValues = [];
-
-      for (let a of currencies) {
-        for (let b of currencies) {
-          if (b === a) continue;
-          for (let c of currencies) {
-            if (c === a || c === b) continue;
-
-            try {
-              const r1 = await fetchRate(a, b);
-              const r2 = await fetchRate(b, c);
-              const r3 = await fetchRate(c, a);
-
-              const val1 = base * r1;
-              const val2 = val1 * r2;
-              const val3 = val2 * r3;
-
-              const profit = val3 - base;
-              const profitPct = (profit / base) * 100;
-
-              if (profit > topProfit) {
-                topProfit = profit;
-                bestRoute = [a, b, c, a];
-                bestValues = [base, val1, val2, val3];
-                top = `${a} → ${b} → ${c} → ${a} = ${val3.toFixed(2)} (Profit: ${profit.toFixed(2)} | ${profitPct.toFixed(2)}%)`;
-              }
-            } catch {}
+      // Suggested route: From -> Mid -> To
+      let bestProfit = 0;
+      let bestMid = null;
+      currencyList.forEach(mid => {
+        if (mid !== from && mid !== to && rates[mid]) {
+          const viaMid = amount * (rates[mid] / rates[from]) * (rates[to] / rates[mid]);
+          const profit = viaMid - amount * (rates[to] / rates[from]);
+          if (profit > bestProfit) {
+            bestProfit = profit;
+            bestMid = mid;
           }
         }
-      }
+      });
 
-      document.getElementById("topArb").innerText = top || "No profitable arbitrage found.";
-      drawChart(bestRoute, bestValues);
+      if (bestMid) {
+        const viaAmount = amount * (rates[bestMid] / rates[from]) * (rates[to] / rates[bestMid]);
+        const gain = viaAmount - amount * (rates[to] / rates[from]);
+        const gainPct = (gain / (amount * (rates[to] / rates[from]))) * 100;
+        document.getElementById("arbitrageInfo").innerText = `Suggested route: ${from} → ${bestMid} → ${to} | Gain: ${gain.toFixed(2)} ${to} (${gainPct.toFixed(2)}%)`;
+
+        drawChart([from, bestMid, to], [amount, amount * (rates[bestMid] / rates[from]), viaAmount]);
+      }
     }
 
-    async function suggestMiddle() {
-      const from = document.getElementById("filterFrom").value;
-      const to = document.getElementById("filterTo").value;
-      let best = "";
-      let bestGain = 0;
-      const base = 1000;
-
-      for (let mid of currencies) {
-        if (mid === from || mid === to) continue;
-
-        try {
-          const r1 = await fetchRate(from, mid);
-          const r2 = await fetchRate(mid, to);
-          const result = base * r1 * r2;
-          const direct = await fetchRate(from, to) * base;
-          const gain = result - direct;
-          const gainPct = (gain / base) * 100;
-
-          if (gain > bestGain) {
-            bestGain = gain;
-            best = `${from} → ${mid} → ${to} = ${result.toFixed(2)} (Gain: ${gain.toFixed(2)} | ${gainPct.toFixed(2)}%)`;
-          }
-        } catch {}
-      }
-
-      document.getElementById("filterResult").innerText = best || "No profitable middle currency found.";
-    }
-
-    function drawChart(route, values) {
-      if (!route || !values || route.length !== values.length) return;
-
+    function drawChart(labels, dataPoints) {
+      const ctx = document.getElementById('arbitrageChart').getContext('2d');
       if (window.arbChart) window.arbChart.destroy();
-
-      const ctx = document.getElementById("arbChart").getContext("2d");
       window.arbChart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: route,
+          labels: labels,
           datasets: [{
-            label: 'Value During Arbitrage',
-            data: values,
-            backgroundColor: 'rgba(52,152,219,0.2)',
+            label: 'Currency Flow',
+            data: dataPoints,
             borderColor: '#3498db',
-            borderWidth: 2,
+            backgroundColor: 'rgba(52, 152, 219, 0.2)',
+            borderWidth: 3,
             fill: true,
-            tension: 0.3,
+            pointBackgroundColor: '#2c3e50',
             pointRadius: 5,
-            pointBackgroundColor: '#1abc9c'
           }]
         },
         options: {
+          responsive: true,
           scales: {
             y: {
               beginAtZero: false,
               title: {
                 display: true,
-                text: 'Currency Value'
+                text: 'Amount'
               }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
             }
           }
         }
       });
     }
 
-    findTopArbitrage();
+    fetchRates();
   </script>
 </body>
 </html>
