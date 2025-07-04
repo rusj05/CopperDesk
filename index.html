@@ -98,14 +98,12 @@
 
   <script>
     const currencies = ["CAD", "DKK", "USD", "NOK", "EUR", "GBP", "JPY", "CHF", "SEK", "AUD"];
-
     const populate = (id) => {
       const el = document.getElementById(id);
       currencies.forEach(curr => {
         el.innerHTML += `<option value="${curr}">${curr}</option>`;
       });
     };
-
     ["from", "to", "filterFrom", "filterTo"].forEach(populate);
 
     async function fetchRate(base, target) {
@@ -129,6 +127,7 @@
       let topProfit = 0;
       const base = 1000;
       let bestRoute = [];
+      let bestValues = [];
 
       for (let a of currencies) {
         for (let b of currencies) {
@@ -140,14 +139,19 @@
               const r1 = await fetchRate(a, b);
               const r2 = await fetchRate(b, c);
               const r3 = await fetchRate(c, a);
-              const final = base * r1 * r2 * r3;
-              const profit = final - base;
+
+              const val1 = base * r1;
+              const val2 = val1 * r2;
+              const val3 = val2 * r3;
+
+              const profit = val3 - base;
               const profitPct = (profit / base) * 100;
 
               if (profit > topProfit) {
                 topProfit = profit;
                 bestRoute = [a, b, c, a];
-                top = `${a} → ${b} → ${c} → ${a} = ${final.toFixed(2)} (Profit: ${profit.toFixed(2)} | ${profitPct.toFixed(2)}%)`;
+                bestValues = [base, val1, val2, val3];
+                top = `${a} → ${b} → ${c} → ${a} = ${val3.toFixed(2)} (Profit: ${profit.toFixed(2)} | ${profitPct.toFixed(2)}%)`;
               }
             } catch {}
           }
@@ -155,7 +159,7 @@
       }
 
       document.getElementById("topArb").innerText = top || "No profitable arbitrage found.";
-      drawChart(bestRoute);
+      drawChart(bestRoute, bestValues);
     }
 
     async function suggestMiddle() {
@@ -186,7 +190,9 @@
       document.getElementById("filterResult").innerText = best || "No profitable middle currency found.";
     }
 
-    function drawChart(route) {
+    function drawChart(route, values) {
+      if (!route || !values || route.length !== values.length) return;
+
       if (window.arbChart) window.arbChart.destroy();
 
       const ctx = document.getElementById("arbChart").getContext("2d");
@@ -195,12 +201,12 @@
         data: {
           labels: route,
           datasets: [{
-            label: 'Arbitrage Route',
-            data: Array(route.length).fill().map((_, i) => i),
+            label: 'Value During Arbitrage',
+            data: values,
             backgroundColor: 'rgba(52,152,219,0.2)',
             borderColor: '#3498db',
             borderWidth: 2,
-            fill: false,
+            fill: true,
             tension: 0.3,
             pointRadius: 5,
             pointBackgroundColor: '#1abc9c'
@@ -209,7 +215,11 @@
         options: {
           scales: {
             y: {
-              display: false
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: 'Currency Value'
+              }
             }
           }
         }
