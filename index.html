@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Copper FX Optimizer</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       margin: 0;
@@ -63,13 +64,18 @@
       font-size: 1rem;
       line-height: 1.6;
     }
+    canvas {
+      background: #fff;
+      border-radius: 10px;
+      margin-top: 20px;
+      max-width: 600px;
+    }
   </style>
 </head>
 <body>
   <h1>Copper FX Optimizer</h1>
-
   <div class="container">
-    <div id="livePrice">Copper Price: 8,300 USD/t</div>
+    <div id="livePrice">Fetching Copper Price...</div>
     <label for="currency">Select Currency</label>
     <select id="currency"></select>
 
@@ -86,8 +92,9 @@
     <div class="output" id="results"></div>
   </div>
 
+  <canvas id="priceChart" width="600" height="300"></canvas>
+
   <script>
-    const COPPER_USD = 8300; // Placeholder: USD per tonne
     const currencies = ["USD","CAD","DKK","EUR","GBP","JPY","NOK","SEK"];
     const currencySelect = document.getElementById('currency');
 
@@ -104,6 +111,28 @@
       const res = await fetch(`https://api.frankfurter.app/latest?amount=1&from=${from}&to=${to}`);
       const data = await res.json();
       return data.rates[to];
+    }
+
+    async function getLiveCopperPrice() {
+      try {
+        const res = await fetch('https://api.metalradar.com/v1/public/copper?apikey=YOUR_API_KEY');
+        const data = await res.json();
+        return data.price; // adapt to actual API structure
+      } catch (err) {
+        console.error('Error fetching copper price:', err);
+        return 8300; // fallback
+      }
+    }
+
+    async function getHistoricalCopperPrices() {
+      try {
+        const res = await fetch('https://api.mocki.io/v2/549a5d8b/CopperHistorical'); // placeholder
+        const data = await res.json();
+        return data;
+      } catch (err) {
+        console.error('Error fetching historical prices:', err);
+        return [];
+      }
     }
 
     async function bestFx(to, fee) {
@@ -129,8 +158,9 @@
       const fee = parseFloat(document.getElementById('fee').value) / 100 || 0;
       const sell = parseFloat(document.getElementById('sellPrice').value) || 0;
 
+      const copperUSD = await getLiveCopperPrice();
       const { rate, route } = await bestFx(to, fee);
-      const copperPrice = COPPER_USD * rate;
+      const copperPrice = copperUSD * rate;
       const totalCost = copperPrice * qty;
       const revenue = sell * qty;
       const profit = revenue - totalCost;
@@ -144,9 +174,37 @@
         `Best FX Route: ${route}`;
     }
 
+    async function drawChart() {
+      const history = await getHistoricalCopperPrices();
+      const labels = history.map(x => x.date);
+      const prices = history.map(x => x.price);
+
+      const ctx = document.getElementById('priceChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Copper Price USD/t',
+            data: prices,
+            borderColor: '#00cc66',
+            borderWidth: 2,
+            fill: false
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true }
+          }
+        }
+      });
+    }
+
     document.getElementById('calcBtn').addEventListener('click', calculate);
     currencySelect.addEventListener('change', calculate);
     calculate();
+    drawChart();
   </script>
 </body>
 </html>
