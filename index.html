@@ -62,9 +62,13 @@
       text-align: center;
       font-weight: bold;
     }
-    .opportunity {
+    .opportunity, .top-opportunity {
       margin: 5px 0;
       text-align: center;
+    }
+    .top-opportunity {
+      font-weight: bold;
+      color: #1abc9c;
     }
   </style>
 </head>
@@ -98,7 +102,6 @@
 
   <script>
     const currencies = ["CAD", "DKK", "USD", "NOK", "EUR", "GBP", "JPY", "CHF", "SEK", "AUD"];
-
     const fromEl = document.getElementById("from");
     const toEl = document.getElementById("to");
     const viaEl = document.getElementById("via");
@@ -140,6 +143,8 @@
 
     async function findArbitrage() {
       const opportunities = [];
+      let topOpportunity = null;
+      let topProfit = 0;
       const amount = 1000;
 
       for (let from of currencies) {
@@ -157,19 +162,30 @@
               const profit = endAmount - amount;
 
               if (profit >= 0.01) {
-                opportunities.push(`${from} → ${via} → ${to} → ${from} = ${endAmount.toFixed(2)} (${profit.toFixed(2)} profit)`);
+                const text = `${from} → ${via} → ${to} → ${from} = ${endAmount.toFixed(2)} (${profit.toFixed(2)} profit)`;
+                opportunities.push(text);
+
+                if (profit > topProfit) {
+                  topProfit = profit;
+                  topOpportunity = text;
+                }
               }
             } catch (e) {
-              console.error(`Error fetching rate for ${from}-${via}-${to}:`, e);
+              console.error(`Error checking ${from} → ${via} → ${to}`, e);
             }
           }
         }
       }
 
       if (opportunities.length === 0) {
-        arbitrageEl.innerText = "No profitable arbitrage found right now.";
+        arbitrageEl.innerHTML = "No profitable arbitrage found right now.";
       } else {
-        arbitrageEl.innerHTML = opportunities.map(o => `<div class="opportunity">${o}</div>`).join("");
+        let html = "";
+        if (topOpportunity) {
+          html += `<div class="top-opportunity">🔝 Top Arbitrage: ${topOpportunity}</div><hr>`;
+        }
+        html += opportunities.map(o => `<div class="opportunity">${o}</div>`).join("");
+        arbitrageEl.innerHTML = html;
       }
     }
 
