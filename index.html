@@ -72,7 +72,7 @@
 <body>
   <div class="panel">
     <h1>Copper FX Optimizer</h1>
-    <div id="livePrice">Copper Price: 8305.74 USD/t</div>
+    <div id="livePrice">Copper Price: loading...</div>
 
     <label>Select Currency</label>
     <select id="currency"></select>
@@ -80,8 +80,8 @@
     <label>Quantity (tonnes)</label>
     <input type="number" id="quantity" value="1" min="0" />
 
-    <label>Conversion Fee %</label>
-    <input type="number" id="fee" value="0" min="0" step="0.01" />
+    <label>Bank Conversion Rate (USD to Selected Currency)</label>
+    <input type="number" id="bankRate" value="0" min="0" step="0.0001" />
 
     <label>Selling Price per tonne</label>
     <input type="number" id="sellPrice" value="0" min="0" />
@@ -107,7 +107,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const COPPER_USD = 8305.74;
     const currencies = ["USD", "CAD", "DKK", "EUR", "GBP", "JPY", "NOK", "SEK"];
     const currencySelect = document.getElementById("currency");
 
@@ -119,28 +118,14 @@
     });
     currencySelect.value = "USD";
 
-    async function getRate(from, to) {
-      if (from === to) return 1;
-      const res = await fetch(`https://api.frankfurter.app/latest?amount=1&from=${from}&to=${to}`);
-      const data = await res.json();
-      return data.rates[to];
-    }
-
-    async function bestFx(to, fee) {
-      const direct = await getRate("USD", to) * (1 - fee);
-      let best = direct;
-      let route = `USD → ${to}`;
-      for (const mid of currencies) {
-        if (mid === "USD" || mid === to) continue;
-        const r1 = await getRate("USD", mid);
-        const r2 = await getRate(mid, to);
-        const final = r1 * (1 - fee) * r2 * (1 - fee);
-        if (final > best) {
-          best = final;
-          route = `USD → ${mid} → ${to}`;
-        }
+    async function getLiveCopperPrice() {
+      try {
+        const res = await fetch("https://api.metalpriceapi.com/v1/latest?base=USD&symbols=COPPER&apikey=43551205d0f8f8ce6fe40f6e79c3aa0b");
+        const data = await res.json();
+        return data.rates.COPPER;
+      } catch (err) {
+        return 8305.74;
       }
-      return { rate: best, route };
     }
 
     const tradeLog = [];
@@ -148,14 +133,14 @@
     async function calculate() {
       const to = currencySelect.value;
       const qty = parseFloat(document.getElementById("quantity").value) || 0;
-      const fee = parseFloat(document.getElementById("fee").value) / 100 || 0;
+      const bankRate = parseFloat(document.getElementById("bankRate").value) || 0;
       const sell = parseFloat(document.getElementById("sellPrice").value) || 0;
       const freight = parseFloat(document.getElementById("freight").value) || 0;
       const insurance = parseFloat(document.getElementById("insurance").value) || 0;
       const duty = parseFloat(document.getElementById("duty").value) || 0;
 
-      const { rate, route } = await bestFx(to, fee);
-      const copperPrice = COPPER_USD * rate;
+      const copperUSD = await getLiveCopperPrice();
+      const copperPrice = copperUSD * bankRate;
       const landedCost = copperPrice + freight + insurance + duty;
       const totalCost = landedCost * qty;
       const revenue = sell * qty;
@@ -167,19 +152,19 @@
         `Total Purchase Cost: ${totalCost.toFixed(2)} ${to}<br>` +
         `Potential Profit: ${profit.toFixed(2)} ${to}<br>` +
         `Margin: ${margin.toFixed(2)} %<br>` +
-        `Best FX Route: ${route}`;
+        `Bank FX Rate Used: ${bankRate}`;
 
       tradeLog.push({
         Date: new Date().toISOString().split("T")[0],
         Currency: to,
         Quantity: qty,
-        CopperUSD: COPPER_USD,
+        CopperUSD: copperUSD,
+        BankRate: bankRate,
         ConvertedPrice: copperPrice,
         TotalCost: totalCost,
         SellPrice: sell,
         Profit: profit,
-        Margin: margin.toFixed(2),
-        FXRoute: route
+        Margin: margin.toFixed(2)
       });
     }
 
@@ -204,7 +189,6 @@
       a.click();
     });
 
-    // Chart setup
     const ctx = document.getElementById("copperChart").getContext("2d");
     new Chart(ctx, {
       type: 'line',
