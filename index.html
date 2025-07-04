@@ -4,84 +4,83 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Currency Arbitrage Tool</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(to right, #1f2937, #4b5563);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
       margin: 0;
-      padding: 2rem;
+      padding: 20px;
     }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
     h1 {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
+      text-align: center;
+      color: #333;
     }
-    form {
-      background-color: #111827;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-      max-width: 400px;
-      width: 100%;
-    }
+
     label {
       display: block;
-      margin-top: 1rem;
-      font-weight: 600;
+      margin-top: 15px;
+      font-weight: bold;
     }
+
     select, input[type="number"] {
       width: 100%;
-      padding: 0.5rem;
-      border: none;
-      border-radius: 8px;
-      margin-top: 0.5rem;
-      font-size: 1rem;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
     }
+
     button {
-      margin-top: 1.5rem;
+      margin-top: 20px;
       width: 100%;
-      padding: 0.75rem;
-      border: none;
-      background-color: #10b981;
+      padding: 12px;
+      background: #007bff;
       color: white;
-      font-size: 1rem;
-      font-weight: bold;
-      border-radius: 8px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
       cursor: pointer;
     }
+
     button:hover {
-      background-color: #059669;
+      background: #0056b3;
     }
+
     #result {
-      margin-top: 2rem;
-      font-size: 1.2rem;
-      text-align: center;
+      margin-top: 20px;
+      padding: 15px;
+      background: #e9f7ef;
+      border-left: 5px solid #28a745;
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
-  <h1>Currency Arbitrage Tool</h1>
+  <div class="container">
+    <h1>Currency Arbitrage Tool</h1>
 
-  <form>
     <label for="from">From currency:</label>
     <select id="from">
       <option value="CAD">CAD</option>
-      <option value="USD">USD</option>
       <option value="DKK">DKK</option>
       <option value="NOK">NOK</option>
     </select>
 
     <label for="via">Via currency (optional):</label>
     <select id="via">
-      <option value="">--None--</option>
+      <option value="">-- None --</option>
       <option value="CAD">CAD</option>
-      <option value="USD">USD</option>
       <option value="DKK">DKK</option>
       <option value="NOK">NOK</option>
     </select>
@@ -89,24 +88,29 @@
     <label for="to">To currency:</label>
     <select id="to">
       <option value="CAD">CAD</option>
-      <option value="USD">USD</option>
       <option value="DKK">DKK</option>
       <option value="NOK">NOK</option>
     </select>
 
     <label for="amount">Amount:</label>
-    <input type="number" id="amount" value="1000" />
+    <input type="number" id="amount" placeholder="Enter amount" />
 
-    <button type="button" onclick="calculate()">Calculate</button>
-  </form>
+    <button onclick="calculate()">Calculate</button>
 
-  <div id="result"></div>
+    <div id="result"></div>
+  </div>
 
   <script>
     async function getRate(from, to) {
-      const res = await fetch(`https://api.exchangerate.host/convert?from=${from}&to=${to}`);
-      const data = await res.json();
-      return data.result;
+      try {
+        const res = await fetch(`https://api.exchangerate.host/convert?from=${from}&to=${to}`);
+        const data = await res.json();
+        if (!data.result || isNaN(data.result)) throw new Error("Invalid conversion rate");
+        return data.result;
+      } catch (error) {
+        console.error("Error fetching rate:", error);
+        return null;
+      }
     }
 
     async function calculate() {
@@ -114,22 +118,36 @@
       const via = document.getElementById("via").value;
       const to = document.getElementById("to").value;
       const amount = parseFloat(document.getElementById("amount").value);
+      const resultDiv = document.getElementById("result");
 
-      let finalAmount;
+      if (isNaN(amount) || amount <= 0) {
+        resultDiv.innerText = "Please enter a valid amount.";
+        return;
+      }
+
       let output;
+      let finalAmount;
 
-      if (via) {
+      if (via && via !== from && via !== to) {
         const rate1 = await getRate(from, via);
         const rate2 = await getRate(via, to);
+        if (rate1 === null || rate2 === null) {
+          resultDiv.innerText = "Currency conversion failed. Please try again.";
+          return;
+        }
         finalAmount = amount * rate1 * rate2;
         output = `${amount} ${from} → ${via} → ${to} = ${finalAmount.toFixed(2)} ${to}`;
       } else {
         const rate = await getRate(from, to);
+        if (rate === null) {
+          resultDiv.innerText = "Currency conversion failed. Please try again.";
+          return;
+        }
         finalAmount = amount * rate;
         output = `${amount} ${from} → ${to} = ${finalAmount.toFixed(2)} ${to}`;
       }
 
-      document.getElementById("result").innerText = output;
+      resultDiv.innerText = output;
     }
   </script>
 </body>
