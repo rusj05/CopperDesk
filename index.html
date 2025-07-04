@@ -57,7 +57,7 @@
     button:hover {
       background-color: #00b359;
     }
-    .result, .profit, .top-arb {
+    .result, .profit, .top-arb, .top-routes {
       margin-top: 15px;
       text-align: center;
       font-size: 1rem;
@@ -89,6 +89,7 @@
     <div class="result" id="result"></div>
     <div class="profit" id="profit"></div>
     <div class="top-arb" id="topArb"></div>
+    <div class="top-routes" id="topRoutes"></div>
   </div>
 
   <script>
@@ -156,6 +157,8 @@
     async function showTopArbitrage(amount, fee) {
       let bestProfit = -Infinity;
       let bestPath = "";
+      let top3 = [];
+
       for (let from of currencies) {
         for (let via of currencies) {
           if (via === from) continue;
@@ -168,17 +171,26 @@
               const dkkRate = await getRate(from, "DKK");
               const baseInDKK = amount * dkkRate;
               const profitDKK = result - baseInDKK;
+              const profitPct = (profitDKK / baseInDKK) * 100;
+
               if (profitDKK > bestProfit) {
                 bestProfit = profitDKK;
-                bestPath = `${from} → ${via} → ${to} = ${result.toFixed(2)} (${profitDKK.toFixed(2)} DKK profit)`;
+                bestPath = `${from} → ${via} → ${to} = ${result.toFixed(2)} (${profitDKK.toFixed(2)} DKK profit, ${profitPct.toFixed(2)}%)`;
               }
+
+              top3.push({ path: `${from} → ${via} → ${to}`, result, profitDKK, profitPct });
             } catch (err) {
               continue;
             }
           }
         }
       }
-      document.getElementById("topArb").textContent = `Best Arbitrage Route: ${bestPath}`;
+
+      top3.sort((a, b) => b.profitDKK - a.profitDKK);
+      const topThreeText = top3.slice(0, 3).map(r => `${r.path}: ${r.result.toFixed(2)} (Profit: ${r.profitDKK.toFixed(2)} DKK, ${r.profitPct.toFixed(2)}%)`).join("<br>");
+
+      document.getElementById("topArb").innerHTML = `<b>Top Arbitrage:</b><br>${bestPath}`;
+      document.getElementById("topRoutes").innerHTML = `<b>Best 3 Currency Routes:</b><br>${topThreeText}`;
     }
   </script>
 </body>
