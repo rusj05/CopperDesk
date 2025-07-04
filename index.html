@@ -4,45 +4,51 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Copper FX Optimizer</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(to right, #1e3c72, #2a5298);
-      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
       padding: 40px;
+      margin: 0;
       display: flex;
-      flex-direction: column;
-      align-items: center;
+      justify-content: center;
     }
-    h1, h3 {
-      margin-bottom: 20px;
+
+    .main-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      max-width: 1200px;
+      width: 100%;
     }
-    .container {
+
+    .panel, .chart-wrapper {
       background: #111;
       padding: 25px;
       border-radius: 12px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      max-width: 600px;
-      width: 100%;
-      margin-bottom: 20px;
+      flex: 1 1 400px;
     }
+
     label {
-      display: block;
-      margin-top: 15px;
       font-size: 0.9rem;
+      margin-top: 15px;
+      display: block;
     }
+
     select, input {
       width: 100%;
       padding: 10px;
+      border-radius: 6px;
       margin-top: 5px;
       border: none;
-      border-radius: 6px;
+      outline: none;
       background-color: #222;
       color: white;
       font-size: 1rem;
     }
+
     button {
       width: 100%;
       padding: 12px;
@@ -55,102 +61,73 @@
       color: white;
       cursor: pointer;
     }
+
     button:hover {
       background-color: #00b359;
     }
+
     .output {
       margin-top: 15px;
       text-align: center;
       font-size: 1rem;
-      line-height: 1.6;
     }
-    canvas {
-      background: #fff;
-      border-radius: 10px;
-      margin-top: 20px;
-      max-width: 600px;
-    }
-    table {
+
+    #copperChart {
       width: 100%;
-      margin-top: 20px;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 8px;
-      border: 1px solid #555;
-      text-align: center;
+      height: 400px !important;
     }
   </style>
 </head>
 <body>
-  <h1>Copper FX Optimizer</h1>
+  <div class="main-wrapper">
+    <div class="panel">
+      <h1>Copper FX Optimizer</h1>
+      <div id="livePrice">Copper Price: Loading...</div>
 
-  <div class="container">
-    <div id="livePrice">Fetching Copper Price...</div>
+      <label for="currency">Select Currency</label>
+      <select id="currency"></select>
 
-    <label for="currency">Select Currency</label>
-    <select id="currency"></select>
+      <label for="quantity">Quantity (tonnes)</label>
+      <input type="number" id="quantity" value="1" min="0" />
 
-    <label for="quantity">Quantity (tonnes)</label>
-    <input type="number" id="quantity" value="1" min="0" />
+      <label for="fee">Conversion Fee %</label>
+      <input type="number" id="fee" value="0" min="0" step="0.01" />
 
-    <label for="fee">Conversion Fee %</label>
-    <input type="number" id="fee" value="0" min="0" step="0.01" />
+      <label for="sellPrice">Selling Price per tonne</label>
+      <input type="number" id="sellPrice" value="0" min="0" />
 
-    <label for="sellPrice">Selling Price per tonne</label>
-    <input type="number" id="sellPrice" value="0" min="0" />
+      <label for="freight">Freight per tonne</label>
+      <input type="number" id="freight" value="0" min="0" />
 
-    <label for="freight">Freight per tonne</label>
-    <input type="number" id="freight" value="0" min="0" />
+      <label for="insurance">Insurance per tonne</label>
+      <input type="number" id="insurance" value="0" min="0" />
 
-    <label for="insurance">Insurance per tonne</label>
-    <input type="number" id="insurance" value="0" min="0" />
+      <label for="duty">Import Duty per tonne</label>
+      <input type="number" id="duty" value="0" min="0" />
 
-    <label for="duties">Import Duties %</label>
-    <input type="number" id="duties" value="0" min="0" />
+      <button id="calcBtn">Calculate</button>
+      <div class="output" id="results"></div>
+    </div>
 
-    <button id="calcBtn">Calculate</button>
-    <div class="output" id="results"></div>
+    <div class="chart-wrapper">
+      <h3>Copper Price Trend</h3>
+      <canvas id="copperChart"></canvas>
+    </div>
   </div>
 
-  <canvas id="priceChart" width="600" height="300"></canvas>
-
-  <div class="container">
-    <h3>📒 Position Tracker</h3>
-    <button onclick="savePosition()">Save Position</button>
-    <table id="positions">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Qty</th>
-          <th>Cost</th>
-          <th>Sell</th>
-          <th>P/L</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <div class="container">
-    <h3>📄 Quote Generator</h3>
-    <label for="client">Client Name</label>
-    <input type="text" id="client" />
-    <button onclick="generateQuote()">Download Quote PDF</button>
-  </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
+    const COPPER_USD = 8300;
     const currencies = ["USD", "CAD", "DKK", "EUR", "GBP", "JPY", "NOK", "SEK"];
-    const currencySelect = document.getElementById("currency");
+    const currencySelect = document.getElementById('currency');
 
     currencies.forEach(c => {
-      const opt = document.createElement("option");
+      const opt = document.createElement('option');
       opt.value = c;
       opt.textContent = c;
       currencySelect.appendChild(opt);
     });
-    currencySelect.value = "USD";
+    currencySelect.value = 'USD';
 
     async function getRate(from, to) {
       if (from === to) return 1;
@@ -159,33 +136,13 @@
       return data.rates[to];
     }
 
-    async function getLiveCopperPrice() {
-      try {
-        const res = await fetch('https://api.metalpriceapi.com/v1/latest?base=USD&symbols=USDxCU');
-        const data = await res.json();
-        return data.rates['USDxCU'] * 32150;
-      } catch (_) {
-        return 8300;
-      }
-    }
-
-    async function getHistoricalCopperPrices() {
-      return [
-        { date: "2024-06-01", price: 8250 },
-        { date: "2024-06-10", price: 8320 },
-        { date: "2024-06-20", price: 8285 },
-        { date: "2024-06-30", price: 8300 },
-        { date: "2024-07-04", price: 8350 }
-      ];
-    }
-
     async function bestFx(to, fee) {
-      const direct = await getRate("USD", to) * (1 - fee);
+      const direct = await getRate('USD', to) * (1 - fee);
       let best = direct;
       let route = `USD → ${to}`;
       for (const mid of currencies) {
-        if (mid === "USD" || mid === to) continue;
-        const r1 = await getRate("USD", mid);
+        if (mid === 'USD' || mid === to) continue;
+        const r1 = await getRate('USD', mid);
         const r2 = await getRate(mid, to);
         const final = r1 * (1 - fee) * r2 * (1 - fee);
         if (final > best) {
@@ -196,87 +153,58 @@
       return { rate: best, route };
     }
 
-    async function calculate(save = false) {
+    async function calculate() {
       const to = currencySelect.value;
-      const qty = parseFloat(document.getElementById("quantity").value) || 0;
-      const fee = parseFloat(document.getElementById("fee").value) / 100 || 0;
-      const sell = parseFloat(document.getElementById("sellPrice").value) || 0;
-      const freight = parseFloat(document.getElementById("freight").value) || 0;
-      const insurance = parseFloat(document.getElementById("insurance").value) || 0;
-      const duties = parseFloat(document.getElementById("duties").value) / 100 || 0;
+      const qty = parseFloat(document.getElementById('quantity').value) || 0;
+      const fee = parseFloat(document.getElementById('fee').value) / 100 || 0;
+      const sell = parseFloat(document.getElementById('sellPrice').value) || 0;
+      const freight = parseFloat(document.getElementById('freight').value) || 0;
+      const insurance = parseFloat(document.getElementById('insurance').value) || 0;
+      const duty = parseFloat(document.getElementById('duty').value) || 0;
 
-      const copperUSD = await getLiveCopperPrice();
       const { rate, route } = await bestFx(to, fee);
-      const copperPrice = copperUSD * rate;
-      const totalCost = (copperPrice + freight + insurance) * (1 + duties);
-      const finalCost = totalCost * qty;
+      const copperPrice = COPPER_USD * rate;
+      const landedCost = copperPrice + freight + insurance + duty;
+      const totalCost = landedCost * qty;
       const revenue = sell * qty;
-      const profit = revenue - finalCost;
-      const margin = finalCost ? (profit / finalCost) * 100 : 0;
+      const profit = revenue - totalCost;
+      const margin = totalCost ? (profit / totalCost) * 100 : 0;
 
-      document.getElementById("livePrice").textContent = `Copper Price: ${copperPrice.toFixed(2)} ${to}/t`;
-      document.getElementById("results").innerHTML =
-        `Landed Cost/tonne: ${totalCost.toFixed(2)} ${to}<br>` +
-        `Total Purchase Cost: ${finalCost.toFixed(2)} ${to}<br>` +
+      document.getElementById('livePrice').textContent = `Copper Price: ${copperPrice.toFixed(2)} ${to}/t`;
+      document.getElementById('results').innerHTML =
+        `Total Purchase Cost: ${totalCost.toFixed(2)} ${to}<br>` +
         `Potential Profit: ${profit.toFixed(2)} ${to}<br>` +
-        `Margin: ${margin.toFixed(2)}%<br>` +
+        `Margin: ${margin.toFixed(2)} %<br>` +
         `Best FX Route: ${route}`;
-
-      if (save) {
-        const table = document.getElementById("positions").querySelector("tbody");
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${new Date().toLocaleDateString()}</td><td>${qty}</td><td>${totalCost.toFixed(2)}</td><td>${sell}</td><td>${profit.toFixed(2)}</td>`;
-        table.appendChild(row);
-      }
     }
 
-    function savePosition() {
-      calculate(true);
-    }
+    document.getElementById('calcBtn').addEventListener('click', calculate);
+    currencySelect.addEventListener('change', calculate);
 
-    function generateQuote() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const client = document.getElementById("client").value || "Client";
-      const details = document.getElementById("results").innerText;
-      doc.setFontSize(14);
-      doc.text(`Quote for ${client}`, 10, 20);
-      doc.setFontSize(10);
-      const lines = doc.splitTextToSize(details, 180);
-      doc.text(lines, 10, 40);
-      doc.save(`Quote_${client}.pdf`);
-    }
-
-    async function drawChart() {
-      const history = await getHistoricalCopperPrices();
-      const labels = history.map(x => x.date);
-      const prices = history.map(x => x.price);
-      const ctx = document.getElementById("priceChart").getContext("2d");
-      new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: [{
-            label: "Copper Price USD/t",
-            data: prices,
-            borderColor: "#00cc66",
-            borderWidth: 2,
-            fill: false
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: true }
+    // Dummy chart for now
+    const ctx = document.getElementById('copperChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+        datasets: [{
+          label: 'Copper Price (USD)',
+          data: [8250, 8300, 8280, 8320, 8340],
+          borderColor: '#00cc66',
+          tension: 0.2
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: false
           }
         }
-      });
-    }
+      }
+    });
 
-    document.getElementById("calcBtn").addEventListener("click", () => calculate());
-    currencySelect.addEventListener("change", () => calculate());
     calculate();
-    drawChart();
   </script>
 </body>
 </html>
