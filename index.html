@@ -56,15 +56,14 @@
       margin-top: 10px;
       font-weight: bold;
     }
-    .opportunity, .top-opportunity {
-      margin: 5px 0;
-      text-align: center;
-    }
     .top-opportunity {
       font-weight: bold;
       color: #1abc9c;
     }
-    hr { border: 0.5px solid #1abc9c; margin: 20px 0; }
+    hr {
+      border: 0.5px solid #1abc9c;
+      margin: 20px 0;
+    }
   </style>
 </head>
 <body>
@@ -145,10 +144,11 @@
               const r3 = await fetchRate(c, a);
               const final = base * r1 * r2 * r3;
               const profit = final - base;
+              const profitPct = (profit / base) * 100;
 
               if (profit > topProfit) {
                 topProfit = profit;
-                top = `${a} → ${b} → ${c} → ${a} = ${final.toFixed(2)} (${profit.toFixed(2)} profit)`;
+                top = `${a} → ${b} → ${c} → ${a} = ${final.toFixed(2)} (Profit: ${profit.toFixed(2)} | ${profitPct.toFixed(2)}%)`;
               }
             } catch {}
           }
@@ -172,11 +172,13 @@
           const r1 = await fetchRate(from, mid);
           const r2 = await fetchRate(mid, to);
           const result = base * r1 * r2;
-          const gain = result - (await fetchRate(from, to)) * base;
+          const direct = await fetchRate(from, to) * base;
+          const gain = result - direct;
+          const gainPct = (gain / base) * 100;
 
           if (gain > bestGain) {
             bestGain = gain;
-            best = `${from} → ${mid} → ${to} = ${result.toFixed(2)} (Gain: ${gain.toFixed(2)})`;
+            best = `${from} → ${mid} → ${to} = ${result.toFixed(2)} (Gain: ${gain.toFixed(2)} | ${gainPct.toFixed(2)}%)`;
           }
         } catch {}
       }
