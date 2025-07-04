@@ -90,6 +90,15 @@
     <label for="sellPrice">Selling Price per tonne</label>
     <input type="number" id="sellPrice" value="0" min="0" />
 
+    <label for="freight">Freight per tonne</label>
+    <input type="number" id="freight" value="0" min="0" />
+
+    <label for="insurance">Insurance per tonne</label>
+    <input type="number" id="insurance" value="0" min="0" />
+
+    <label for="duties">Import Duties %</label>
+    <input type="number" id="duties" value="0" min="0" />
+
     <button id="calcBtn">Calculate</button>
     <div class="output" id="results"></div>
   </div>
@@ -157,18 +166,23 @@
       const qty = parseFloat(document.getElementById("quantity").value) || 0;
       const fee = parseFloat(document.getElementById("fee").value) / 100 || 0;
       const sell = parseFloat(document.getElementById("sellPrice").value) || 0;
+      const freight = parseFloat(document.getElementById("freight").value) || 0;
+      const insurance = parseFloat(document.getElementById("insurance").value) || 0;
+      const duties = parseFloat(document.getElementById("duties").value) / 100 || 0;
 
       const copperUSD = await getLiveCopperPrice();
       const { rate, route } = await bestFx(to, fee);
       const copperPrice = copperUSD * rate;
-      const totalCost = copperPrice * qty;
+      const totalCost = (copperPrice + freight + insurance) * (1 + duties);
+      const finalCost = totalCost * qty;
       const revenue = sell * qty;
-      const profit = revenue - totalCost;
-      const margin = totalCost ? (profit / totalCost) * 100 : 0;
+      const profit = revenue - finalCost;
+      const margin = finalCost ? (profit / finalCost) * 100 : 0;
 
       document.getElementById("livePrice").textContent = `Copper Price: ${copperPrice.toFixed(2)} ${to}/t`;
       document.getElementById("results").innerHTML =
-        `Total Purchase Cost: ${totalCost.toFixed(2)} ${to}<br>` +
+        `Landed Cost/tonne: ${totalCost.toFixed(2)} ${to}<br>` +
+        `Total Purchase Cost: ${finalCost.toFixed(2)} ${to}<br>` +
         `Potential Profit: ${profit.toFixed(2)} ${to}<br>` +
         `Margin: ${margin.toFixed(2)}%<br>` +
         `Best FX Route: ${route}`;
