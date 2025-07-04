@@ -3,9 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Corporate FX Optimizer</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Copper FX Optimizer</title>
   <style>
     body {
@@ -13,14 +10,10 @@
       font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(to right, #1e3c72, #2a5298);
       color: #fff;
-      padding: 20px;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #121212;
-      color: #eee;
+      padding: 40px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 40px;
     }
     h1, h3 {
       margin-bottom: 20px;
@@ -30,50 +23,32 @@
       padding: 25px;
       border-radius: 12px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    h1 { margin-bottom: 20px; }
-    .panel {
-      background: #1e1e1e;
-      padding: 20px;
-      border-radius: 8px;
       max-width: 600px;
       width: 100%;
-      max-width: 500px;
       margin-bottom: 20px;
-      box-sizing: border-box;
     }
     label {
-      font-size: 0.9rem;
-      margin-top: 15px;
       display: block;
       margin-top: 15px;
+      font-size: 0.9rem;
     }
     select, input {
       width: 100%;
       padding: 10px;
-      border-radius: 6px;
-      padding: 8px;
       margin-top: 5px;
       border: none;
-      outline: none;
+      border-radius: 6px;
       background-color: #222;
       color: white;
       font-size: 1rem;
-      border-radius: 4px;
-      background: #2c2c2c;
-      color: #fff;
-      box-sizing: border-box;
     }
     button {
       width: 100%;
       padding: 12px;
       margin-top: 20px;
       background-color: #00cc66;
-      padding: 10px;
       border: none;
       border-radius: 6px;
-      border-radius: 4px;
-      background: #00aa55;
-      color: #fff;
       font-weight: bold;
       font-size: 1rem;
       color: white;
@@ -82,227 +57,96 @@
     button:hover {
       background-color: #00b359;
     }
-    .result, .output {
+    .output {
       margin-top: 15px;
       text-align: center;
       font-size: 1rem;
+      line-height: 1.6;
     }
-    button:hover { background: #00994d; }
-    .output { margin-top: 15px; line-height: 1.6; }
   </style>
 </head>
 <body>
   <h1>Copper FX Optimizer</h1>
-  <div class="panel">
+
+  <div class="container">
     <div id="livePrice">Copper Price: 8,300 USD/t</div>
-
-<h1>Corporate FX Optimizer</h1>
-
-<!-- Supplier Quote Comparison -->
-<div class="container">
-  <h3>Compare Supplier Quotes</h3>
-
-  <label>Base Currency</label>
-  <select id="baseCurrency"></select>
-
-  <label>Supplier 1 - Name</label>
-  <input type="text" id="s1name" value="Supplier A"/>
-  <label>Supplier 1 - Currency</label>
-  <select id="s1currency"></select>
-  <label>Supplier 1 - Price</label>
-  <input type="number" id="s1price" value="1000"/>
-
-  <label>Supplier 2 - Name</label>
-  <input type="text" id="s2name" value="Supplier B"/>
-  <label>Supplier 2 - Currency</label>
-  <select id="s2currency"></select>
-  <label>Supplier 2 - Price</label>
-  <input type="number" id="s2price" value="950"/>
-
-  <button onclick="compareSuppliers()">Compare Suppliers</button>
-  <div class="output" id="supplierComparison"></div>
-</div>
-
-<!-- Arbitrage Tool (Optional) -->
-<div class="container">
-  <h3>Simple FX Conversion</h3>
-  <label for="from">From Currency</label>
-  <select id="from"></select>
-
-  <label for="via">Via Currency (optional)</label>
-  <select id="via">
-    <option value="">--None--</option>
-  </select>
     <label for="currency">Select Currency</label>
     <select id="currency"></select>
 
-  <label for="to">To Currency</label>
-  <select id="to"></select>
     <label for="quantity">Quantity (tonnes)</label>
     <input type="number" id="quantity" value="1" min="0"/>
 
-  <label for="amount">Amount</label>
-  <input type="number" id="amount" value="1000"/>
     <label for="fee">Conversion Fee %</label>
     <input type="number" id="fee" value="0" min="0" step="0.01"/>
 
-  <label for="fee">Conversion Fee % (per step)</label>
-  <input type="number" id="fee" value="0"/>
     <label for="sellPrice">Selling Price per tonne</label>
     <input type="number" id="sellPrice" value="0" min="0"/>
 
-  <button onclick="calculate()">Convert</button>
-  <div class="result" id="result"></div>
-  <div class="result" id="profit"></div>
-</div>
     <button id="calcBtn">Calculate</button>
     <div class="output" id="results"></div>
   </div>
 
-<script>
-  const currencies = ["USD", "CAD", "DKK", "EUR", "NOK", "SEK", "GBP", "JPY", "CHF"];
+  <script>
+    const COPPER_USD = 8300; // Placeholder: USD per tonne
+    const currencies = ["USD","CAD","DKK","EUR","GBP","JPY","NOK","SEK"];
+    const currencySelect = document.getElementById('currency');
 
-  const selects = ["from", "to", "via", "baseCurrency", "s1currency", "s2currency"];
-  selects.forEach(id => {
-    const sel = document.getElementById(id);
-    currencies.forEach(cur => {
-      const opt = document.createElement("option");
-      opt.value = cur;
-      opt.textContent = cur;
-      sel.appendChild(opt);
+    currencies.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      currencySelect.appendChild(opt);
     });
-  });
+    currencySelect.value = 'USD';
 
-  document.getElementById("from").value = "USD";
-  document.getElementById("to").value = "DKK";
-  document.getElementById("baseCurrency").value = "DKK";
-
-  async function getRate(from, to) {
-    if (from === to) return 1;
-    const res = await fetch(`https://api.frankfurter.app/latest?amount=1&from=${from}&to=${to}`);
-    const data = await res.json();
-    return data.rates[to];
-  }
-
-  async function compareSuppliers() {
-    const base = document.getElementById("baseCurrency").value;
-
-    const s1name = document.getElementById("s1name").value;
-    const s2name = document.getElementById("s2name").value;
-    const s1cur = document.getElementById("s1currency").value;
-    const s2cur = document.getElementById("s2currency").value;
-    const s1price = parseFloat(document.getElementById("s1price").value);
-    const s2price = parseFloat(document.getElementById("s2price").value);
-
-    const s1Rate = await getRate(s1cur, base);
-    const s2Rate = await getRate(s2cur, base);
-
-    const s1Converted = s1price * s1Rate;
-    const s2Converted = s2price * s2Rate;
-
-    let result = `
-      <p>${s1name}: ${s1Converted.toFixed(2)} ${base}</p>
-      <p>${s2name}: ${s2Converted.toFixed(2)} ${base}</p>
-    `;
-
-    if (s1Converted < s2Converted) {
-      result += `<strong>✅ ${s1name} is cheaper.</strong>`;
-    } else if (s2Converted < s1Converted) {
-      result += `<strong>✅ ${s2name} is cheaper.</strong>`;
-    } else {
-      result += `<strong>⚖️ Both offers are equal in ${base}.</strong>`;
+    async function getRate(from, to) {
+      if (from === to) return 1;
+      const res = await fetch(`https://api.frankfurter.app/latest?amount=1&from=${from}&to=${to}`);
+      const data = await res.json();
+      return data.rates[to];
     }
 
-    document.getElementById("supplierComparison").innerHTML = result;
-  }
-
-  async function calculate() {
-    const from = document.getElementById("from").value;
-    const to = document.getElementById("to").value;
-    const via = document.getElementById("via").value || null;
-    const amount = parseFloat(document.getElementById("amount").value);
-    const fee = parseFloat(document.getElementById("fee").value) / 100;
-
-    let finalAmount;
-    if (via) {
-      const rate1 = await getRate(from, via);
-      const rate2 = await getRate(via, to);
-      const step1 = amount * rate1 * (1 - fee);
-      finalAmount = step1 * rate2 * (1 - fee);
-    } else {
-      const rate = await getRate(from, to);
-      finalAmount = amount * rate * (1 - fee);
-const COPPER_USD = 8300; // USD per tonne, replace with live API
-const currencies = ["USD","CAD","DKK","EUR","GBP","JPY","NOK","SEK"];
-const currencySelect = document.getElementById('currency');
-
-// populate currency dropdown
-currencies.forEach(c => {
-  const opt = document.createElement('option');
-  opt.value = c;
-  opt.textContent = c;
-  currencySelect.appendChild(opt);
-});
-currencySelect.value = 'USD';
-
-async function getRate(from, to) {
-  if (from === to) return 1;
-  const res = await fetch(`https://api.frankfurter.app/latest?amount=1&from=${from}&to=${to}`);
-  const data = await res.json();
-  return data.rates[to];
-}
-
-async function bestFx(to, fee) {
-  const direct = await getRate('USD', to) * (1 - fee);
-  let best = direct;
-  let route = `USD → ${to}`;
-  for (const mid of currencies) {
-    if (mid === 'USD' || mid === to) continue;
-    const r1 = await getRate('USD', mid);
-    const r2 = await getRate(mid, to);
-    const final = r1 * (1 - fee) * r2 * (1 - fee);
-    if (final > best) {
-      best = final;
-      route = `USD → ${mid} → ${to}`;
+    async function bestFx(to, fee) {
+      const direct = await getRate('USD', to) * (1 - fee);
+      let best = direct;
+      let route = `USD → ${to}`;
+      for (const mid of currencies) {
+        if (mid === 'USD' || mid === to) continue;
+        const r1 = await getRate('USD', mid);
+        const r2 = await getRate(mid, to);
+        const final = r1 * (1 - fee) * r2 * (1 - fee);
+        if (final > best) {
+          best = final;
+          route = `USD → ${mid} → ${to}`;
+        }
+      }
+      return { rate: best, route };
     }
 
-    const dkkRate = await getRate(from, "DKK");
-    const baseInDKK = amount * dkkRate;
-    const profitDKK = finalAmount - baseInDKK;
-    const profitPct = (profitDKK / baseInDKK) * 100;
+    async function calculate() {
+      const to = currencySelect.value;
+      const qty = parseFloat(document.getElementById('quantity').value) || 0;
+      const fee = parseFloat(document.getElementById('fee').value) / 100 || 0;
+      const sell = parseFloat(document.getElementById('sellPrice').value) || 0;
 
-    document.getElementById("result").textContent = `${amount} ${from} = ${finalAmount.toFixed(2)} ${to}`;
-    document.getElementById("profit").textContent = `Profit: ${profitDKK.toFixed(2)} DKK (${profitPct.toFixed(2)}%)`;
-  }
-  return { rate: best, route };
-}
+      const { rate, route } = await bestFx(to, fee);
+      const copperPrice = COPPER_USD * rate;
+      const totalCost = copperPrice * qty;
+      const revenue = sell * qty;
+      const profit = revenue - totalCost;
+      const margin = totalCost ? (profit / totalCost) * 100 : 0;
 
-async function calculate() {
-  const to = currencySelect.value;
-  const qty = parseFloat(document.getElementById('quantity').value) || 0;
-  const fee = parseFloat(document.getElementById('fee').value) / 100 || 0;
-  const sell = parseFloat(document.getElementById('sellPrice').value) || 0;
+      document.getElementById('livePrice').textContent = `Copper Price: ${copperPrice.toFixed(2)} ${to}/t`;
+      document.getElementById('results').innerHTML =
+        `Total Purchase Cost: ${totalCost.toFixed(2)} ${to}<br>` +
+        `Potential Profit: ${profit.toFixed(2)} ${to}<br>` +
+        `Margin: ${margin.toFixed(2)} %<br>` +
+        `Best FX Route: ${route}`;
+    }
 
-  const { rate, route } = await bestFx(to, fee);
-  const copperPrice = COPPER_USD * rate;
-  const totalCost = copperPrice * qty;
-  const revenue = sell * qty;
-  const profit = revenue - totalCost;
-  const margin = totalCost ? (profit / totalCost) * 100 : 0;
-
-  document.getElementById('livePrice').textContent = `Copper Price: ${copperPrice.toFixed(2)} ${to}/t`;
-  document.getElementById('results').innerHTML =
-    `Total Purchase Cost: ${totalCost.toFixed(2)} ${to}<br>` +
-    `Potential Profit: ${profit.toFixed(2)} ${to}<br>` +
-    `Margin: ${margin.toFixed(2)} %<br>` +
-    `Best FX Route: ${route}`;
-}
-
-document.getElementById('calcBtn').addEventListener('click', calculate);
-currencySelect.addEventListener('change', calculate);
-
-// initial calculation
-calculate();
-</script>
+    document.getElementById('calcBtn').addEventListener('click', calculate);
+    currencySelect.addEventListener('change', calculate);
+    calculate();
+  </script>
 </body>
 </html>
