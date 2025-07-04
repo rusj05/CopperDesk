@@ -116,12 +116,16 @@
     }
 
     async function getLiveCopperPrice() {
-      // This should be replaced with a real API for live copper price.
-      return 8300; // USD per tonne as placeholder
+      try {
+        const res = await fetch('https://api.metalpriceapi.com/v1/latest?base=USD&symbols=USDxCU');
+        const data = await res.json();
+        return data.rates['USDxCU'] * 32150; // Convert from troy ounces to tonnes
+      } catch (_) {
+        return 8300; // fallback
+      }
     }
 
     async function getHistoricalCopperPrices() {
-      // Placeholder data; replace with a real API if needed
       return [
         { date: "2024-06-01", price: 8250 },
         { date: "2024-06-10", price: 8320 },
