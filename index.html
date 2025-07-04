@@ -181,18 +181,13 @@
     document.getElementById("calcBtn").addEventListener("click", async () => {
       const buyCur = buySelect.value;
       const sellCur = sellSelect.value;
-      const qty = parseFloat(document.getElementById("quantity").value);
-      const bankRate = parseFloat(document.getElementById("bankRate").value);
-      const purchasePrice = parseFloat(document.getElementById("purchasePrice").value);
-      const sellPrice = parseFloat(document.getElementById("sellPrice").value);
-      const freight = parseFloat(document.getElementById("freight").value);
-      const insurance = parseFloat(document.getElementById("insurance").value);
-      const duty = parseFloat(document.getElementById("duty").value);
-
-      if (!qty || !bankRate || !purchasePrice || !sellPrice) {
-        alert("Please fill out all required fields.");
-        return;
-      }
+      const qty = parseFloat(document.getElementById("quantity").value || "0");
+      const bankRate = parseFloat(document.getElementById("bankRate").value || "1");
+      const purchasePrice = parseFloat(document.getElementById("purchasePrice").value || "0");
+      const sellPrice = parseFloat(document.getElementById("sellPrice").value || "0");
+      const freight = parseFloat(document.getElementById("freight").value || "0");
+      const insurance = parseFloat(document.getElementById("insurance").value || "0");
+      const duty = parseFloat(document.getElementById("duty").value || "0");
 
       const copperPriceUSD = await getCopperPriceUSD();
       document.getElementById("livePrice").textContent = `Copper Price: ${copperPriceUSD.toFixed(2)} USD/t`;
@@ -203,7 +198,7 @@
       const totalRevenue = sellPrice * qty;
       const profit = totalRevenue - totalCost;
       const margin = totalCost ? (profit / totalCost) * 100 : 0;
-      const breakevenRate = purchasePrice > 0 ? (totalCostPerTonne / purchasePrice) : 0;
+      const breakevenRate = purchasePrice > 0 ? (sellPrice - freight - insurance - duty) / purchasePrice : 0;
 
       document.getElementById("results").innerHTML =
         `Total Cost: ${totalCost.toFixed(2)} ${sellCur}<br>` +
