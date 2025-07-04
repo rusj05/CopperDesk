@@ -7,135 +7,160 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to right, #bdc3c7, #2c3e50);
       margin: 0;
-      padding: 20px;
-      color: #333;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #1e3c72, #2a5298);
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
     }
+
     .container {
-      max-width: 800px;
-      margin: auto;
-      background: white;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-    }
-    h1 {
+      background: #121212;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      max-width: 400px;
+      width: 100%;
       text-align: center;
     }
-    select, input[type="number"], button {
+
+    select, input, button {
       width: 100%;
+      margin-top: 10px;
       padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
     }
+
     button {
-      background-color: #2980b9;
+      background-color: #1db954;
       color: white;
       font-weight: bold;
       cursor: pointer;
+      transition: background-color 0.3s;
     }
-    .result, .arbitrage-result {
+
+    button:hover {
+      background-color: #17a446;
+    }
+
+    .output, .chart-container {
+      margin-top: 20px;
       text-align: center;
-      margin-top: 15px;
-      font-weight: bold;
     }
+
+    .chart-container {
+      background: #1f1f1f;
+      border-radius: 8px;
+      padding: 20px;
+    }
+
     canvas {
-      margin-top: 30px;
+      max-width: 100%;
     }
   </style>
 </head>
 <body>
+  <h1>Currency Arbitrage Tool</h1>
   <div class="container">
-    <h1>Currency Arbitrage Tool</h1>
+    <label>From currency:</label>
     <select id="fromCurrency"></select>
+
+    <label>Via currency (optional):</label>
+    <select id="viaCurrency">
+      <option value="">--None--</option>
+    </select>
+
+    <label>To currency:</label>
     <select id="toCurrency"></select>
-    <input type="number" id="amount" value="1000" placeholder="Amount" />
+
+    <label>Amount:</label>
+    <input type="number" id="amount" value="1000" />
+
     <button onclick="calculateArbitrage()">Convert</button>
-    <div class="result" id="conversionResult"></div>
-    <div class="arbitrage-result" id="arbitrageInfo"></div>
-    <canvas id="arbitrageChart" height="200"></canvas>
+
+    <div class="output" id="resultDisplay"></div>
+  </div>
+
+  <div class="chart-container">
+    <h3>Conversion Breakdown</h3>
+    <canvas id="conversionChart"></canvas>
   </div>
 
   <script>
-    const currencyList = ["USD", "CAD", "DKK", "EUR", "JPY", "AUD"];
-    const fromCurrency = document.getElementById('fromCurrency');
-    const toCurrency = document.getElementById('toCurrency');
+    const currencies = ['USD', 'EUR', 'CAD', 'DKK', 'JPY', 'AUD'];
+    const apiBase = 'https://api.frankfurter.app/latest';
 
-    currencyList.forEach(curr => {
-      fromCurrency.innerHTML += `<option value="${curr}">${curr}</option>`;
-      toCurrency.innerHTML += `<option value="${curr}">${curr}</option>`;
+    const fromSelect = document.getElementById('fromCurrency');
+    const toSelect = document.getElementById('toCurrency');
+    const viaSelect = document.getElementById('viaCurrency');
+    const resultDisplay = document.getElementById('resultDisplay');
+
+    currencies.forEach(cur => {
+      fromSelect.innerHTML += `<option value="${cur}">${cur}</option>`;
+      toSelect.innerHTML += `<option value="${cur}">${cur}</option>`;
+      if (cur !== '') viaSelect.innerHTML += `<option value="${cur}">${cur}</option>`;
     });
 
-    let rates = {};
+    let chart;
 
-    async function fetchRates() {
-      const res = await fetch('https://api.frankfurter.app/latest?from=USD');
+    async function fetchRate(from, to) {
+      if (from === to) return 1;
+      const res = await fetch(`${apiBase}?from=${from}&to=${to}`);
       const data = await res.json();
-      rates = data.rates;
-      rates["USD"] = 1.0;
+      return data.rates[to];
     }
 
     async function calculateArbitrage() {
-      await fetchRates();
-
-      const from = fromCurrency.value;
-      const to = toCurrency.value;
+      const from = fromSelect.value;
+      const via = viaSelect.value;
+      const to = toSelect.value;
       const amount = parseFloat(document.getElementById('amount').value);
 
-      if (!rates[from] || !rates[to]) {
-        document.getElementById("conversionResult").innerText = 'Invalid conversion.';
-        return;
+      let intermediate = amount;
+      let labels = [from];
+      let values = [amount];
+
+      if (via) {
+        const rate1 = await fetchRate(from, via);
+        intermediate = amount * rate1;
+        labels.push(via);
+        values.push(intermediate);
+
+        const rate2 = await fetchRate(via, to);
+        intermediate *= rate2;
+        labels.push(to);
+        values.push(intermediate);
+      } else {
+        const rate = await fetchRate(from, to);
+        intermediate *= rate;
+        labels.push(to);
+        values.push(intermediate);
       }
 
-      const usdToFrom = 1 / rates[from];
-      const usdToTo = 1 / rates[to];
-
-      const result = amount * (usdToTo / usdToFrom);
-      document.getElementById("conversionResult").innerText = `${amount} ${from} = ${result.toFixed(2)} ${to}`;
-
-      // Suggested route: From -> Mid -> To
-      let bestProfit = 0;
-      let bestMid = null;
-      currencyList.forEach(mid => {
-        if (mid !== from && mid !== to && rates[mid]) {
-          const viaMid = amount * (rates[mid] / rates[from]) * (rates[to] / rates[mid]);
-          const profit = viaMid - amount * (rates[to] / rates[from]);
-          if (profit > bestProfit) {
-            bestProfit = profit;
-            bestMid = mid;
-          }
-        }
-      });
-
-      if (bestMid) {
-        const viaAmount = amount * (rates[bestMid] / rates[from]) * (rates[to] / rates[bestMid]);
-        const gain = viaAmount - amount * (rates[to] / rates[from]);
-        const gainPct = (gain / (amount * (rates[to] / rates[from]))) * 100;
-        document.getElementById("arbitrageInfo").innerText = `Suggested route: ${from} → ${bestMid} → ${to} | Gain: ${gain.toFixed(2)} ${to} (${gainPct.toFixed(2)}%)`;
-
-        drawChart([from, bestMid, to], [amount, amount * (rates[bestMid] / rates[from]), viaAmount]);
-      }
+      resultDisplay.innerHTML = `${amount} ${from} → ${to} = ${intermediate.toFixed(2)} ${to}`;
+      drawChart(labels, values);
     }
 
-    function drawChart(labels, dataPoints) {
-      const ctx = document.getElementById('arbitrageChart').getContext('2d');
-      if (window.arbChart) window.arbChart.destroy();
-      window.arbChart = new Chart(ctx, {
+    function drawChart(labels, data) {
+      const ctx = document.getElementById('conversionChart').getContext('2d');
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: labels,
+          labels,
           datasets: [{
-            label: 'Currency Flow',
-            data: dataPoints,
-            borderColor: '#3498db',
-            backgroundColor: 'rgba(52, 152, 219, 0.2)',
-            borderWidth: 3,
+            label: 'Conversion Progress',
+            data,
+            borderColor: '#1db954',
+            backgroundColor: 'rgba(29,185,84,0.2)',
+            tension: 0.3,
             fill: true,
-            pointBackgroundColor: '#2c3e50',
-            pointRadius: 5,
           }]
         },
         options: {
@@ -143,22 +168,20 @@
           scales: {
             y: {
               beginAtZero: false,
-              title: {
-                display: true,
-                text: 'Amount'
-              }
+              ticks: { color: '#fff' },
+              grid: { color: '#444' }
+            },
+            x: {
+              ticks: { color: '#fff' },
+              grid: { color: '#444' }
             }
           },
           plugins: {
-            legend: {
-              display: false
-            }
+            legend: { labels: { color: '#fff' } }
           }
         }
       });
     }
-
-    fetchRates();
   </script>
 </body>
 </html>
