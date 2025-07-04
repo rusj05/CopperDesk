@@ -67,6 +67,14 @@
       width: 100% !important;
       height: 400px !important;
     }
+    .info-box {
+      font-size: 0.9rem;
+      background: #222;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 20px;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
@@ -98,6 +106,23 @@
     <button id="calcBtn">Calculate</button>
     <div class="result" id="results"></div>
     <button id="exportBtn">📥 Download Trade Log (CSV)</button>
+
+    <div class="info-box">
+      <strong>About FX Rate:</strong><br>
+      The FX rate you enter should reflect what your bank or broker charges you for converting USD to your selected currency. This is not the market rate — it's the actual rate at which your funds are exchanged.
+      <br><br>
+      <strong>Example:</strong> If USD→DKK market rate is 7.50, and your bank offers 7.54, then enter 7.54.
+      <br><br>
+      <strong>Currency Tips:</strong>
+      <ul>
+        <li><strong>USD</strong>: Base pricing currency for copper internationally.</li>
+        <li><strong>EUR</strong>: Common in EU transactions.</li>
+        <li><strong>DKK, NOK, SEK</strong>: Nordic currencies, can fluctuate with energy markets.</li>
+        <li><strong>JPY</strong>: Often more stable but low rate movement.</li>
+        <li><strong>CAD</strong>: Influenced by commodity exports (like copper).</li>
+        <li><strong>GBP</strong>: Watch for post-Brexit volatility.</li>
+      </ul>
+    </div>
   </div>
 
   <div class="chart-container">
