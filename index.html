@@ -12,13 +12,14 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
+      justify-content: flex-start;
+      min-height: 100vh;
       margin: 0;
+      padding: 20px;
     }
 
     h1 {
-      margin-bottom: 20px;
+      margin: 20px 0;
     }
 
     .container {
@@ -27,7 +28,9 @@
       border-radius: 10px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
       text-align: left;
-      width: 320px;
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 30px;
     }
 
     select, input[type="number"] {
@@ -54,9 +57,26 @@
       background-color: #16a085;
     }
 
-    .result {
+    .result, #suggestions {
       margin-top: 20px;
-      font-size: 18px;
+      font-size: 16px;
+      text-align: center;
+      background: #1f2d40;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    h3 {
+      margin-bottom: 10px;
       text-align: center;
     }
   </style>
@@ -96,16 +116,31 @@
     <input type="number" id="amount" value="1000" />
 
     <button onclick="calculate()">Calculate</button>
+
+    <div class="result" id="result"></div>
   </div>
 
-  <div class="result" id="result"></div>
+  <div id="suggestions" class="container">
+    <h3>Suggested Arbitrage Opportunities</h3>
+    <ul id="arbitrageList">
+      <li>Click "Calculate" to see suggestions...</li>
+    </ul>
+  </div>
 
   <script>
-    async function fetchRate(from, to, amount) {
-      const url = `https://api.frankfurter.app/latest?amount=${amount}&from=${from}&to=${to}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch");
-      const data = await response.json();
+    const currencies = ["CAD", "DKK", "NOK", "USD", "EUR"];
+
+    async function fetchAllRates(base) {
+      const url = `https://api.frankfurter.app/latest?from=${base}&to=${currencies.filter(c => c !== base).join(',')}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      return data.rates;
+    }
+
+    async function getRate(from, to, amount) {
+      if (from === to) return amount;
+      const res = await fetch(`https://api.frankfurter.app/latest?amount=${amount}&from=${from}&to=${to}`);
+      const data = await res.json();
       return data.rates[to];
     }
 
@@ -124,17 +159,67 @@
       try {
         let finalAmount;
         if (via && via !== from && via !== to) {
-          const first = await fetchRate(from, via, amount);
-          const second = await fetchRate(via, to, first);
+          const first = await getRate(from, via, amount);
+          const second = await getRate(via, to, first);
           finalAmount = second;
           resultBox.textContent = `${amount} ${from} → ${via} → ${to} = ${finalAmount.toFixed(2)} ${to}`;
         } else {
-          const direct = await fetchRate(from, to, amount);
+          const direct = await getRate(from, to, amount);
           finalAmount = direct;
           resultBox.textContent = `${amount} ${from} → ${to} = ${finalAmount.toFixed(2)} ${to}`;
         }
+
+        await suggestArbitrage(amount);
       } catch (err) {
+        console.error(err);
         resultBox.textContent = "❌ Failed to fetch live exchange rates.";
+      }
+    }
+
+    async function suggestArbitrage(baseAmount) {
+      const list = document.getElementById("arbitrageList");
+      list.innerHTML = "<li>Calculating opportunities...</li>";
+
+      const suggestions = [];
+      for (let a of currencies) {
+        const ratesA = await fetchAllRates(a);
+        for (let b of currencies) {
+          if (b === a) continue;
+          const rateAB = ratesA[b];
+          if (!rateAB) continue;
+          const ratesB = await fetchAllRates(b);
+          for (let c of currencies) {
+            if (c === a || c === b) continue;
+            const rateBC = ratesB[c];
+            if (!rateBC) continue;
+            const ratesC = await fetchAllRates(c);
+            const rateCA = ratesC[a];
+            if (!rateCA) continue;
+
+            const finalAmount = baseAmount * rateAB * rateBC * rateCA;
+            const profit = finalAmount - baseAmount;
+            const margin = ((profit / baseAmount) * 100).toFixed(2);
+
+            if (profit > 1) {
+              suggestions.push({
+                route: `${a} → ${b} → ${c} → ${a}`,
+                result: `${finalAmount.toFixed(2)} ${a} (↑ ${margin}%)`
+              });
+            }
+          }
+        }
+      }
+
+      list.innerHTML = "";
+      if (suggestions.length === 0) {
+        list.innerHTML = "<li>No profitable arbitrage found right now.</li>";
+      } else {
+        suggestions.sort((a, b) => parseFloat(b.result) - parseFloat(a.result));
+        for (let s of suggestions.slice(0, 5)) {
+          const li = document.createElement("li");
+          li.textContent = `${s.route}: ${s.result}`;
+          list.appendChild(li);
+        }
       }
     }
   </script>
