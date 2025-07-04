@@ -15,26 +15,22 @@
       align-items: center;
       padding: 40px;
     }
-
     h1 {
       margin-bottom: 20px;
     }
-
     .container {
       background: #111;
       padding: 25px;
       border-radius: 12px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
       width: 100%;
-      max-width: 400px;
+      max-width: 500px;
     }
-
     label {
       font-size: 0.9rem;
       margin-top: 15px;
       display: block;
     }
-
     select, input {
       width: 100%;
       padding: 10px;
@@ -46,7 +42,6 @@
       color: white;
       font-size: 1rem;
     }
-
     button {
       width: 100%;
       padding: 12px;
@@ -59,12 +54,10 @@
       color: white;
       cursor: pointer;
     }
-
     button:hover {
       background-color: #00b359;
     }
-
-    .result, .profit {
+    .result, .profit, .top-arb {
       margin-top: 15px;
       text-align: center;
       font-size: 1rem;
@@ -95,6 +88,7 @@
 
     <div class="result" id="result"></div>
     <div class="profit" id="profit"></div>
+    <div class="top-arb" id="topArb"></div>
   </div>
 
   <script>
@@ -114,15 +108,9 @@
 
     async function getRate(base, target) {
       if (base === target) return 1;
-      try {
-        const res = await fetch(`https://api.frankfurter.app/latest?amount=1&from=${base}&to=${target}`);
-        if (!res.ok) throw new Error("API request failed");
-        const data = await res.json();
-        return data.rates[target];
-      } catch (err) {
-        alert(`Error fetching exchange rate from ${base} to ${target}.`);
-        throw err;
-      }
+      const res = await fetch(`https://api.frankfurter.app/latest?amount=1&from=${base}&to=${target}`);
+      const data = await res.json();
+      return data.rates[target];
     }
 
     async function calculate() {
@@ -157,10 +145,40 @@
 
         document.getElementById("result").innerHTML = `${amount} ${from} = ${finalAmount.toFixed(2)} ${to}`;
         document.getElementById("profit").innerHTML = `Profit: ${profitDKK.toFixed(2)} DKK (${profitPct.toFixed(2)}%)`;
+
+        showTopArbitrage(amount, fee);
       } catch (err) {
         document.getElementById("result").textContent = "Error fetching data.";
         document.getElementById("profit").textContent = "";
       }
+    }
+
+    async function showTopArbitrage(amount, fee) {
+      let bestProfit = -Infinity;
+      let bestPath = "";
+      for (let from of currencies) {
+        for (let via of currencies) {
+          if (via === from) continue;
+          for (let to of currencies) {
+            if (to === from || to === via) continue;
+            try {
+              const r1 = await getRate(from, via);
+              const r2 = await getRate(via, to);
+              const result = amount * r1 * (1 - fee) * r2 * (1 - fee);
+              const dkkRate = await getRate(from, "DKK");
+              const baseInDKK = amount * dkkRate;
+              const profitDKK = result - baseInDKK;
+              if (profitDKK > bestProfit) {
+                bestProfit = profitDKK;
+                bestPath = `${from} → ${via} → ${to} = ${result.toFixed(2)} (${profitDKK.toFixed(2)} DKK profit)`;
+              }
+            } catch (err) {
+              continue;
+            }
+          }
+        }
+      }
+      document.getElementById("topArb").textContent = `Best Arbitrage Route: ${bestPath}`;
     }
   </script>
 </body>
