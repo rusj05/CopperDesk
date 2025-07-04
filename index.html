@@ -4,99 +4,96 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Currency Arbitrage Tool</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to right, #2c3e50, #3498db);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      background: #f4f7fa;
+      color: #333;
       padding: 40px 20px;
     }
-    h1 {
-      margin-bottom: 20px;
+    h1, h3 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
     }
     .box {
-      background: #1c2331;
+      background: #ffffff;
       padding: 25px;
       border-radius: 10px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-      margin: 20px;
-      width: 100%;
-      max-width: 400px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
     }
-    label, select, input {
-      display: block;
+    label, select, input, button {
       width: 100%;
-      margin-bottom: 10px;
-    }
-    select, input {
       padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 20px;
       border-radius: 5px;
-      border: none;
+      border: 1px solid #ccc;
+      font-size: 16px;
     }
     button {
-      padding: 12px;
-      width: 100%;
-      border: none;
-      background-color: #1abc9c;
+      background-color: #3498db;
       color: white;
-      font-weight: bold;
+      border: none;
       cursor: pointer;
-      border-radius: 5px;
-      transition: background 0.3s ease;
     }
     button:hover {
-      background-color: #16a085;
+      background-color: #2980b9;
     }
     .result {
       text-align: center;
-      margin-top: 10px;
       font-weight: bold;
+      font-size: 18px;
     }
-    .top-opportunity {
-      font-weight: bold;
-      color: #1abc9c;
-    }
-    hr {
-      border: 0.5px solid #1abc9c;
-      margin: 20px 0;
+    canvas {
+      max-width: 100%;
+      height: auto;
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h1>Currency Arbitrage Tool</h1>
 
-  <h1>Currency Arbitrage Tool</h1>
+    <div class="box">
+      <label>From currency:</label>
+      <select id="from"></select>
 
-  <div class="box">
-    <label>From currency:</label>
-    <select id="from"></select>
+      <label>To currency:</label>
+      <select id="to"></select>
 
-    <label>To currency:</label>
-    <select id="to"></select>
+      <label>Amount:</label>
+      <input type="number" id="amount" value="1000"/>
 
-    <label>Amount:</label>
-    <input type="number" id="amount" value="1000"/>
+      <button onclick="calculate()">Convert</button>
+      <div class="result" id="conversionResult"></div>
+    </div>
 
-    <button onclick="calculate()">Convert</button>
-    <div class="result" id="conversionResult"></div>
-  </div>
+    <div class="box">
+      <h3>Top Arbitrage Opportunity</h3>
+      <div class="result" id="topArb">Loading...</div>
+    </div>
 
-  <div class="box">
-    <h3>Top Arbitrage Opportunity</h3>
-    <div id="topArb">Loading...</div>
-  </div>
+    <div class="box">
+      <h3>Best 3-Currency Route</h3>
+      <label>Buy in:</label>
+      <select id="filterFrom"></select>
+      <label>Sell in:</label>
+      <select id="filterTo"></select>
+      <button onclick="suggestMiddle()">Find Best Middle Currency</button>
+      <div class="result" id="filterResult"></div>
+    </div>
 
-  <div class="box">
-    <h3>Best 3-Currency Route for Conversion</h3>
-    <label>Buy in:</label>
-    <select id="filterFrom"></select>
-    <label>Sell in:</label>
-    <select id="filterTo"></select>
-    <button onclick="suggestMiddle()">Find Best Middle Currency</button>
-    <div class="result" id="filterResult"></div>
+    <div class="box">
+      <h3>Arbitrage Visual</h3>
+      <canvas id="arbChart"></canvas>
+    </div>
   </div>
 
   <script>
@@ -131,6 +128,7 @@
       let top = "";
       let topProfit = 0;
       const base = 1000;
+      let bestRoute = [];
 
       for (let a of currencies) {
         for (let b of currencies) {
@@ -148,6 +146,7 @@
 
               if (profit > topProfit) {
                 topProfit = profit;
+                bestRoute = [a, b, c, a];
                 top = `${a} → ${b} → ${c} → ${a} = ${final.toFixed(2)} (Profit: ${profit.toFixed(2)} | ${profitPct.toFixed(2)}%)`;
               }
             } catch {}
@@ -156,6 +155,7 @@
       }
 
       document.getElementById("topArb").innerText = top || "No profitable arbitrage found.";
+      drawChart(bestRoute);
     }
 
     async function suggestMiddle() {
@@ -184,6 +184,36 @@
       }
 
       document.getElementById("filterResult").innerText = best || "No profitable middle currency found.";
+    }
+
+    function drawChart(route) {
+      if (window.arbChart) window.arbChart.destroy();
+
+      const ctx = document.getElementById("arbChart").getContext("2d");
+      window.arbChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: route,
+          datasets: [{
+            label: 'Arbitrage Route',
+            data: Array(route.length).fill().map((_, i) => i),
+            backgroundColor: 'rgba(52,152,219,0.2)',
+            borderColor: '#3498db',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.3,
+            pointRadius: 5,
+            pointBackgroundColor: '#1abc9c'
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              display: false
+            }
+          }
+        }
+      });
     }
 
     findTopArbitrage();
