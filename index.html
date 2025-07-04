@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Copper Trade Navigator</title>
+  <title>Copper Trade Navigator | FX & Profit Tool</title>
   <style>
     body {
       margin: 0;
@@ -92,25 +92,25 @@
     <div id="fxRate">Exchange Rate (buy → sell): loading...</div>
 
     <label>Purchase Price per tonne (in Buy Currency)</label>
-    <input type="number" id="purchasePrice" value="8200" min="0" />
+    <input type="number" id="purchasePrice" value="8200" min="0" step="0.01" />
 
     <label>Quantity (tonnes)</label>
-    <input type="number" id="quantity" value="1" min="0" />
+    <input type="number" id="quantity" value="1" min="0" step="0.01" />
 
     <label>Bank Conversion Rate (Buy → Sell Currency)</label>
     <input type="number" id="bankRate" value="0" min="0" step="0.0001" />
 
     <label>Selling Price per tonne (in Sell Currency)</label>
-    <input type="number" id="sellPrice" value="0" min="0" />
+    <input type="number" id="sellPrice" value="0" min="0" step="0.01" />
 
     <label>Freight per tonne (in Sell Currency)</label>
-    <input type="number" id="freight" value="0" min="0" />
+    <input type="number" id="freight" value="0" min="0" step="0.01" />
 
     <label>Insurance per tonne (in Sell Currency)</label>
-    <input type="number" id="insurance" value="0" min="0" />
+    <input type="number" id="insurance" value="0" min="0" step="0.01" />
 
     <label>Import Duty per tonne (in Sell Currency)</label>
-    <input type="number" id="duty" value="0" min="0" />
+    <input type="number" id="duty" value="0" min="0" step="0.01" />
 
     <button id="calcBtn">Calculate</button>
     <div class="result" id="results"></div>
@@ -126,5 +126,136 @@
     <h2>Currency Tips</h2>
     <p>The live copper price shown above reflects the market value in USD per metric tonne. Use your bank’s provided FX rate to calculate your actual costs. If you’re buying in one currency and selling in another, enter the rate your bank offers for converting between them. Use the breakeven rate as a guide to ensure profitability.</p>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const currencies = ["USD", "EUR", "DKK", "GBP", "CAD", "NOK", "SEK", "JPY"];
+    const buySelect = document.getElementById("buyCurrency");
+    const sellSelect = document.getElementById("sellCurrency");
+
+    currencies.forEach(cur => {
+      let opt1 = document.createElement("option");
+      opt1.value = cur;
+      opt1.text = cur;
+      buySelect.appendChild(opt1);
+
+      let opt2 = document.createElement("option");
+      opt2.value = cur;
+      opt2.text = cur;
+      sellSelect.appendChild(opt2);
+    });
+    buySelect.value = "USD";
+    sellSelect.value = "DKK";
+
+    async function updateFXRate() {
+      const from = buySelect.value;
+      const to = sellSelect.value;
+      if (from === to) {
+        document.getElementById("fxRate").textContent = "Exchange Rate: 1.0";
+        return;
+      }
+      const res = await fetch(`https://api.frankfurter.app/latest?from=${from}&to=${to}`);
+      const data = await res.json();
+      document.getElementById("fxRate").textContent = `Exchange Rate (${from} → ${to}): ${data.rates[to].toFixed(4)}`;
+    }
+
+    buySelect.addEventListener("change", updateFXRate);
+    sellSelect.addEventListener("change", updateFXRate);
+    updateFXRate();
+
+    async function getCopperPriceUSD() {
+      const res = await fetch("https://api.metalpriceapi.com/v1/latest?base=USD&symbols=COPPER&apikey=43551205d0f8f8ce6fe40f6e79c3aa0b");
+      const data = await res.json();
+      return data.rates.COPPER;
+    }
+
+    const tradeLog = [];
+    document.getElementById("calcBtn").addEventListener("click", async () => {
+      const buyCur = buySelect.value;
+      const sellCur = sellSelect.value;
+      const qty = parseFloat(document.getElementById("quantity").value);
+      const bankRate = parseFloat(document.getElementById("bankRate").value);
+      const purchasePrice = parseFloat(document.getElementById("purchasePrice").value);
+      const sellPrice = parseFloat(document.getElementById("sellPrice").value);
+      const freight = parseFloat(document.getElementById("freight").value);
+      const insurance = parseFloat(document.getElementById("insurance").value);
+      const duty = parseFloat(document.getElementById("duty").value);
+
+      const copperPriceUSD = await getCopperPriceUSD();
+      document.getElementById("livePrice").textContent = `Copper Price: ${copperPriceUSD.toFixed(2)} USD/t`;
+
+      const convertedPurchase = purchasePrice * bankRate;
+      const totalCostPerTonne = convertedPurchase + freight + insurance + duty;
+      const totalCost = totalCostPerTonne * qty;
+      const totalRevenue = sellPrice * qty;
+      const profit = totalRevenue - totalCost;
+      const margin = (profit / totalCost) * 100;
+      const breakevenRate = (sellPrice - freight - insurance - duty) / purchasePrice;
+
+      document.getElementById("results").innerHTML =
+        `Total Cost: ${totalCost.toFixed(2)} ${sellCur}<br>` +
+        `Revenue: ${totalRevenue.toFixed(2)} ${sellCur}<br>` +
+        `Profit: ${profit.toFixed(2)} ${sellCur}<br>` +
+        `Margin: ${margin.toFixed(2)} %<br>` +
+        `Breakeven FX Rate: ${breakevenRate.toFixed(4)}`;
+
+      tradeLog.push({
+        Date: new Date().toISOString().split("T")[0],
+        BuyCurrency: buyCur,
+        SellCurrency: sellCur,
+        Quantity: qty,
+        PurchasePrice: purchasePrice,
+        BankRate: bankRate,
+        ConvertedPurchase: convertedPurchase,
+        TotalCost: totalCost,
+        SellPrice: sellPrice,
+        Profit: profit,
+        Margin: margin.toFixed(2),
+        BreakevenRate: breakevenRate.toFixed(4)
+      });
+    });
+
+    document.getElementById("exportBtn").addEventListener("click", () => {
+      const csvRows = [];
+      const headers = Object.keys(tradeLog[0]);
+      csvRows.push(headers.join(","));
+      for (const row of tradeLog) {
+        const values = headers.map(h => JSON.stringify(row[h] ?? ""));
+        csvRows.push(values.join(","));
+      }
+      const csv = csvRows.join("\n");
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.setAttribute("href", url);
+      a.setAttribute("download", "copper_trade_log.csv");
+      a.click();
+    });
+
+    const ctx = document.getElementById("copperChart").getContext("2d");
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+        datasets: [{
+          label: 'Copper Price (USD)',
+          data: [8250, 8300, 8280, 8320, 8340],
+          borderColor: '#00ff99',
+          borderWidth: 2,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: '#fff' } }
+        },
+        scales: {
+          x: { ticks: { color: '#fff' } },
+          y: { ticks: { color: '#fff' } }
+        }
+      }
+    });
+  </script>
 </body>
 </html>
