@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CopperDesk | FX & Trade Health Tool</title>
+  <link href="https://cdn.jsdelivr.net/npm/chart.js" rel="stylesheet">
   <style>
     body {
       margin: 0;
@@ -16,7 +17,7 @@
       gap: 20px;
       align-items: center;
     }
-    .panel, .chart-container, .tips-container, .glossary-container {
+    .panel, .chart-container {
       background: #111;
       padding: 20px;
       border-radius: 12px;
@@ -55,9 +56,6 @@
       cursor: pointer;
       color: white;
     }
-    button:hover {
-      background-color: #00b359;
-    }
     .tooltip {
       cursor: help;
       text-decoration: underline dotted;
@@ -77,14 +75,14 @@
       white-space: pre-line;
       max-width: 280px;
     }
-    canvas {
-      width: 100% !important;
-      height: 300px !important;
-    }
     .result, .score-output {
       margin-top: 20px;
       font-size: 1rem;
       line-height: 1.6;
+    }
+    canvas {
+      width: 100% !important;
+      height: 300px !important;
     }
     @media (min-width: 768px) {
       body {
@@ -129,21 +127,14 @@
     <label>Selling Price per tonne (Sell Currency)</label>
     <input type="number" id="sellPrice" min="0" step="0.01" />
 
-    <label>Payment Terms <span class="tooltip" title="Select standard trade terms. Impacts capital exposure and risk.">🛈</span></label>
-    <select id="paymentTerms" onchange="updateTermTooltip(this.value)">
-      <option value="advance">Advance Payment</option>
-      <option value="lc_sight">Letter of Credit at Sight</option>
-      <option value="lc_30">LC 30 Days</option>
-      <option value="lc_60">LC 60 Days</option>
-      <option value="net_30">Net 30</option>
-      <option value="net_60">Net 60</option>
-      <option value="fob">FOB (Free on Board)</option>
-      <option value="cif">CIF (Cost, Insurance & Freight)</option>
+    <label>Payment Terms <span class="tooltip" title="FOB: Free On Board\nCIF: Cost, Insurance and Freight\nLC: Letter of Credit\nDays: Net payment terms like 30, 60, 90 days">🛈</span></label>
+    <select id="paymentTerms">
+      <option value="FOB">FOB</option>
+      <option value="CIF">CIF</option>
+      <option value="LC30">LC 30 Days</option>
+      <option value="LC60">LC 60 Days</option>
+      <option value="LC90">LC 90 Days</option>
     </select>
-    <div id="termExplanation" style="margin-top:8px; font-size: 0.85rem; color: #ccc;"></div>
-
-    <label>Additional Payment Days (optional)</label>
-    <input type="number" id="extraDays" min="0" step="1" placeholder="e.g. 15 for Net 15" />
 
     <button id="calcBtn">Calculate</button>
     <div class="result" id="results"></div>
@@ -222,30 +213,15 @@
       }
     }
 
-    function updateTermTooltip(value) {
-      const explanation = {
-        advance: "Buyer pays 100% before shipment. Safe for seller.",
-        lc_sight: "Bank pays seller immediately upon shipping documents. Secure.",
-        lc_30: "Bank pays seller 30 days after documents. Slight delay.",
-        lc_60: "Bank pays seller 60 days after documents. Longer delay.",
-        net_30: "Buyer pays within 30 days of invoice. Some risk.",
-        net_60: "Buyer pays within 60 days of invoice. More risk.",
-        fob: "Buyer takes responsibility once goods are on board ship.",
-        cif: "Seller covers Cost, Insurance & Freight to destination port."
-      };
-      document.getElementById("termExplanation").textContent = explanation[value] || "";
-    }
-
     buyCurrency.onchange = updateFXRateAndChart;
     sellCurrency.onchange = updateFXRateAndChart;
     updateFXRateAndChart();
-    updateTermTooltip(document.getElementById("paymentTerms").value);
 
     async function getCopperPrice() {
       try {
-        const res = await fetch("https://api.metalpriceapi.com/v1/latest?base=USD&symbols=COPPER&apikey=43551205d0f8f8ce6fe40f6e79c3aa0b");
+        const res = await fetch("https://api.metalpriceapi.com/v1/latest?api_key=43551205d0f8f8ce6fe40f6e79c3aa0b&base=USD&currencies=XCU");
         const data = await res.json();
-        return data.rates?.COPPER || 0;
+        return data.rates?.XCU || 0;
       } catch {
         return 0;
       }
