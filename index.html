@@ -147,7 +147,7 @@
 
   <div class="chart-container">
     <h2>FX Rate Trend</h2>
-    <canvas id="fxChart"></canvas>
+    <canvas id="fxChart" height="300"></canvas>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -186,8 +186,8 @@
         const data = await res.json();
         const entries = Object.entries(data.rates);
         const labels = entries.map(([date]) => date);
-        const values = entries.map(([, val]) => val[to]);
-        fxRate = values.at(-1);
+        const values = entries.map(([, val]) => val[to]).filter(v => typeof v === "number");
+        fxRate = values.length ? values.at(-1) : 1.0;
         fxRateDisplay.textContent = `Exchange Rate (${from} → ${to}): ${fxRate.toFixed(4)}`;
 
         if (fxChartInstance) fxChartInstance.destroy();
@@ -195,7 +195,13 @@
           type: 'line',
           data: {
             labels: labels,
-            datasets: [{ label: `${from} → ${to}`, data: values, borderColor: '#00ff99', borderWidth: 2, fill: false }]
+            datasets: [{
+              label: `${from} → ${to}`,
+              data: values,
+              borderColor: '#00ff99',
+              borderWidth: 2,
+              fill: false
+            }]
           },
           options: {
             responsive: true,
@@ -207,8 +213,9 @@
             }
           }
         });
-      } catch {
+      } catch (e) {
         fxRateDisplay.textContent = "Exchange Rate: error";
+        fxRate = 1.0;
       }
     }
 
@@ -217,8 +224,9 @@
       try {
         const res = await fetch(`https://api.metalpriceapi.com/v1/latest?api_key=43551205d0f8f8ce6fe40f6e79c3aa0b&base=USD&currencies=${metal}`);
         const data = await res.json();
-        const price = data.rates?.[metal] || 0;
-        document.getElementById("livePrice").textContent = price > 0 ? `${metal === 'XCU' ? 'Copper' : 'Gold'} Price: ${price.toFixed(2)} USD/t` : "Metal Price: unavailable";
+        const price = data.rates?.[metal];
+        if (typeof price !== "number" || price <= 0) throw new Error();
+        document.getElementById("livePrice").textContent = `${metal === 'XCU' ? 'Copper' : 'Gold'} Price: ${price.toFixed(2)} USD/t`;
       } catch {
         document.getElementById("livePrice").textContent = "Metal Price: unavailable";
       }
@@ -233,7 +241,8 @@
       const sellingPrice = parseFloat(document.getElementById("sellingPrice").value);
       const paymentTerm = document.getElementById("paymentTerm").value;
 
-      const totalCost = (purchasePrice * fxRate + freight + insurance + duty) * quantity;
+      const fxRateSafe = (typeof fxRate === "number" && !isNaN(fxRate)) ? fxRate : 1.0;
+      const totalCost = (purchasePrice * fxRateSafe + freight + insurance + duty) * quantity;
       const totalRevenue = sellingPrice * quantity;
       const profit = totalRevenue - totalCost;
       const margin = (profit / totalCost) * 100;
@@ -250,7 +259,7 @@
         if (days <= 30) score += 2;
         else if (days <= 60) score += 1;
       } else {
-        score += 2; // Favorable terms like FOB, CIF
+        score += 2; // Favorable terms like FOB, CIF, EXW
       }
 
       let verdict = "";
