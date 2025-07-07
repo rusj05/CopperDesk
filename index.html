@@ -148,6 +148,12 @@
       display: block;
       font-size: 0.97em;
     }
+    .chart-container canvas {
+      width: 100% !important;
+      max-height: 160px !important;
+      height: auto !important;
+      margin-top: 8px;
+    }
     @media (min-width: 800px) {
       body {
         flex-direction: row;
@@ -239,7 +245,7 @@
 
   <div class="chart-container" aria-label="FX Rate Trend">
     <h2>FX Rate Trend</h2>
-    <canvas id="fxChart" height="300"></canvas>
+    <canvas id="fxChart" height="140"></canvas>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -394,7 +400,8 @@
           },
           options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
+            aspectRatio: 2.2,
             plugins: { legend: { labels: { color: '#fff' } } },
             scales: {
               x: { ticks: { color: '#fff' } },
