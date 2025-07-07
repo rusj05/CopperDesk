@@ -8,13 +8,13 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: #214d9b;
+      background: linear-gradient(to bottom, #1c3b6f, #214d9b);
       color: #fff;
       padding: 20px;
       display: flex;
       flex-direction: column;
-      align-items: center;
       gap: 20px;
+      align-items: center;
     }
     .panel, .chart-container, .tips-container, .glossary-container {
       background: #111;
@@ -26,6 +26,7 @@
     }
     h1, h2 {
       margin-bottom: 20px;
+      text-align: center;
     }
     label {
       display: block;
@@ -74,6 +75,7 @@
       left: 0;
       z-index: 100;
       white-space: pre-line;
+      max-width: 280px;
     }
     canvas {
       width: 100% !important;
@@ -83,6 +85,13 @@
       margin-top: 20px;
       font-size: 1rem;
       line-height: 1.6;
+    }
+    @media (min-width: 768px) {
+      body {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
     }
   </style>
 </head>
@@ -99,31 +108,31 @@
 
     <div id="fxRate">Exchange Rate (buy → sell): loading...</div>
 
-    <label>Purchase Price per tonne</label>
-    <input type="number" id="purchasePrice" placeholder="in Buy Currency" />
+    <label>Purchase Price per tonne (Buy Currency)</label>
+    <input type="number" id="purchasePrice" min="0" step="0.01" />
 
     <label>Quantity (tonnes)</label>
-    <input type="number" id="quantity" placeholder="e.g. 10" />
+    <input type="number" id="quantity" min="0" step="0.01" />
 
     <label>Bank Conversion Rate</label>
-    <input type="number" id="bankRate" step="0.0001" placeholder="e.g. 6.8" />
+    <input type="number" id="bankRate" min="0" step="0.0001" />
 
-    <label>Freight per tonne</label>
-    <input type="number" id="freight" placeholder="in Sell Currency" />
+    <label>Freight per tonne (Sell Currency)</label>
+    <input type="number" id="freight" min="0" step="0.01" />
 
-    <label>Insurance per tonne</label>
-    <input type="number" id="insurance" placeholder="in Sell Currency" />
+    <label>Insurance per tonne (Sell Currency)</label>
+    <input type="number" id="insurance" min="0" step="0.01" />
 
-    <label>Import Duty per tonne</label>
-    <input type="number" id="duty" placeholder="in Sell Currency" />
+    <label>Import Duty per tonne (Sell Currency)</label>
+    <input type="number" id="duty" min="0" step="0.01" />
 
-    <label>Selling Price per tonne</label>
-    <input type="number" id="sellPrice" placeholder="in Sell Currency" />
+    <label>Selling Price per tonne (Sell Currency)</label>
+    <input type="number" id="sellPrice" min="0" step="0.01" />
 
     <label>Payment Terms</label>
     <input type="text" id="paymentTerms" placeholder="e.g. 30 days, LC at sight" />
 
-    <button onclick="calculateTrade()">Calculate</button>
+    <button id="calcBtn">Calculate</button>
     <div class="result" id="results"></div>
     <div class="score-output" id="tradeScore"></div>
   </div>
@@ -137,6 +146,9 @@
   <script>
     const buyCurrency = document.getElementById("buyCurrency");
     const sellCurrency = document.getElementById("sellCurrency");
+    const fxRateDisplay = document.getElementById("fxRate");
+    const fxChartCanvas = document.getElementById("fxChart").getContext("2d");
+
     const currencies = ["USD", "EUR", "DKK", "GBP", "CAD", "NOK", "SEK", "JPY"];
     currencies.forEach(c => {
       buyCurrency.add(new Option(c, c));
@@ -150,11 +162,12 @@
     async function updateFXRateAndChart() {
       const from = buyCurrency.value;
       const to = sellCurrency.value;
-      const fxDisplay = document.getElementById("fxRate");
       if (from === to) {
-        fxDisplay.textContent = "Exchange Rate: 1.0";
+        fxRateDisplay.textContent = "Exchange Rate: 1.0";
+        if (fxChartInstance) fxChartInstance.destroy();
         return;
       }
+
       try {
         const end = new Date().toISOString().split("T")[0];
         const start = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
@@ -163,10 +176,11 @@
         const entries = Object.entries(data.rates);
         const labels = entries.map(([date]) => date);
         const values = entries.map(([, val]) => val[to]);
-        fxDisplay.textContent = `Exchange Rate (${from} → ${to}): ${values.at(-1).toFixed(4)}`;
+
+        fxRateDisplay.textContent = `Exchange Rate (${from} → ${to}): ${values.at(-1).toFixed(4)}`;
 
         if (fxChartInstance) fxChartInstance.destroy();
-        fxChartInstance = new Chart(document.getElementById("fxChart"), {
+        fxChartInstance = new Chart(fxChartCanvas, {
           type: 'line',
           data: {
             labels: labels,
@@ -191,9 +205,10 @@
           }
         });
       } catch {
-        fxDisplay.textContent = "Exchange Rate: error";
+        fxRateDisplay.textContent = "Exchange Rate: error";
       }
     }
+
     buyCurrency.onchange = updateFXRateAndChart;
     sellCurrency.onchange = updateFXRateAndChart;
     updateFXRateAndChart();
@@ -202,44 +217,16 @@
       try {
         const res = await fetch("https://api.metalpriceapi.com/v1/latest?base=USD&symbols=COPPER&apikey=43551205d0f8f8ce6fe40f6e79c3aa0b");
         const data = await res.json();
-        document.getElementById("livePrice").textContent = `Copper Price: ${data.rates?.COPPER?.toFixed(2)} USD/t`;
+        return data.rates?.COPPER || 0;
       } catch {
-        document.getElementById("livePrice").textContent = "Copper Price: unavailable";
+        return 0;
       }
     }
-    getCopperPrice();
 
-    function calculateTrade() {
-      const qty = parseFloat(document.getElementById("quantity").value || 0);
-      const purchase = parseFloat(document.getElementById("purchasePrice").value || 0);
-      const bankRate = parseFloat(document.getElementById("bankRate").value || 0);
-      const freight = parseFloat(document.getElementById("freight").value || 0);
-      const insurance = parseFloat(document.getElementById("insurance").value || 0);
-      const duty = parseFloat(document.getElementById("duty").value || 0);
-      const sell = parseFloat(document.getElementById("sellPrice").value || 0);
-      const terms = document.getElementById("paymentTerms").value.toLowerCase();
-
-      const convertedPurchase = purchase * bankRate;
-      const costPerTonne = convertedPurchase + freight + insurance + duty;
-      const totalCost = costPerTonne * qty;
-      const revenue = sell * qty;
-      const profit = revenue - totalCost;
-      const margin = totalCost > 0 ? (profit / totalCost) * 100 : 0;
-      const breakeven = purchase > 0 ? (sell - freight - insurance - duty) / purchase : 0;
-
-      document.getElementById("results").innerHTML = `
-        Total Cost: ${totalCost.toFixed(2)}<br>
-        Revenue: ${revenue.toFixed(2)}<br>
-        Profit: ${profit.toFixed(2)}<br>
-        Margin: ${margin.toFixed(2)} %<br>
-        Breakeven FX Rate: ${breakeven.toFixed(4)}
-      `;
-
-      let score = margin;
-      if (terms.includes("advance")) score += 10;
-      else if (terms.includes("30 days")) score -= 5;
-      document.getElementById("tradeScore").textContent = `Trade Health Score: ${Math.max(0, Math.min(100, score.toFixed(0)))} / 100`;
-    }
+    getCopperPrice().then(price => {
+      const el = document.getElementById("livePrice");
+      el.textContent = price > 0 ? `Copper Price: ${price.toFixed(2)} USD/t` : "Copper Price: unavailable";
+    });
   </script>
 </body>
 </html>
