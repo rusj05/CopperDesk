@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CopperDesk | FX & Trade Health Tool</title>
   <style>
     body {
@@ -22,7 +22,7 @@
       border-radius: 12px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
       width: 100%;
-      max-width: 480px;
+      max-width: 500px;
     }
     h1, h2 {
       margin-bottom: 20px;
@@ -31,9 +31,22 @@
     label {
       display: block;
       margin-top: 15px;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
     }
-    select, input {
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .currency-symbol {
+      min-width: 28px;
+      text-align: right;
+      font-weight: bold;
+      font-size: 1.1em;
+      color: #88eeff;
+    }
+    select, input[type="number"] {
       width: 100%;
       padding: 10px;
       border-radius: 6px;
@@ -42,6 +55,10 @@
       background-color: #222;
       color: white;
       font-size: 1rem;
+    }
+    input.invalid {
+      border: 2px solid #ff3333;
+      background: #330808;
     }
     button {
       width: 100%;
@@ -54,7 +71,9 @@
       font-size: 1rem;
       cursor: pointer;
       color: white;
+      transition: background 0.2s;
     }
+    button:active { background: #00994c; }
     .tooltip {
       cursor: help;
       text-decoration: underline dotted;
@@ -74,64 +93,136 @@
       white-space: pre-line;
       max-width: 280px;
     }
-    canvas {
-      width: 100% !important;
-      height: 300px !important;
+    .loading {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      border-top: 3px solid #00cc66;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-left: 8px;
     }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
     .result, .score-output {
       margin-top: 20px;
-      font-size: 1rem;
+      font-size: 1.08rem;
       line-height: 1.6;
+      padding: 14px;
+      border-radius: 8px;
+      min-height: 28px;
+      font-weight: bold;
+      transition: background 0.3s, color 0.3s;
     }
-    @media (min-width: 768px) {
+    .result.success, .score-output.success { background: #163c26; color: #5ff7b8;}
+    .result.warning, .score-output.warning { background: #4c4018; color: #ffe066;}
+    .result.danger, .score-output.danger { background: #43111d; color: #ff6f8a;}
+    .breakdown-table {
+      width: 100%; margin-top: 16px;
+      border-collapse: collapse;
+      font-size: 0.98rem;
+      background: #181d2b;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .breakdown-table th, .breakdown-table td {
+      padding: 7px 10px;
+      text-align: left;
+      border-bottom: 1px solid #232942;
+    }
+    .breakdown-table tr:last-child td { border-bottom: none; }
+    .risk-flag {
+      color: #ffd966;
+      font-size: 1.2em;
+      vertical-align: middle;
+      margin-left: 8px;
+      cursor: pointer;
+    }
+    .api-error {
+      color: #ff7675;
+      background: #2e1717;
+      padding: 6px 14px;
+      border-radius: 6px;
+      margin-top: 8px;
+      display: block;
+      font-size: 0.97em;
+    }
+    @media (min-width: 800px) {
       body {
         flex-direction: row;
         justify-content: center;
         flex-wrap: wrap;
       }
+      .panel, .chart-container { margin: 12px;}
     }
   </style>
 </head>
 <body>
-  <div class="panel">
+  <div class="panel" aria-label="CopperDesk Trade Panel">
     <h1>CopperDesk</h1>
-
-    <label>Select Metal</label>
-    <select id="metal">
+    <label for="metal">Select Metal</label>
+    <select id="metal" aria-label="Metal type">
       <option value="XCU">Copper</option>
       <option value="XAU">Gold</option>
     </select>
+    <div id="livePrice">
+      Metal Price: loading... (USD/t) <span id="metalSpinner" class="loading" style="display:inline-block;"></span>
+    </div>
+    <span id="metalApiError" class="api-error" style="display:none;"></span>
 
-    <div id="livePrice">Metal Price: loading... (USD/t)</div>
+    <label for="buyCurrency">
+      Buy Currency <span class="tooltip" title="Currency used to buy the metal (e.g. USD)">ℹ</span>
+    </label>
+    <select id="buyCurrency" aria-label="Buy currency"></select>
 
-    <label>Buy Currency <span class="tooltip" title="Currency used to buy the metal (e.g. USD)">ℹ</span></label>
-    <select id="buyCurrency"></select>
+    <label for="sellCurrency">
+      Sell Currency <span class="tooltip" title="Currency you sell or invoice in (e.g. EUR)">ℹ</span>
+    </label>
+    <select id="sellCurrency" aria-label="Sell currency"></select>
+    <div id="fxRate">
+      Exchange Rate (buy → sell): loading... <span id="fxSpinner" class="loading" style="display:inline-block;"></span>
+    </div>
+    <span id="fxApiError" class="api-error" style="display:none;"></span>
 
-    <label>Sell Currency <span class="tooltip" title="Currency you sell or invoice in (e.g. EUR)">ℹ</span></label>
-    <select id="sellCurrency"></select>
+    <label for="purchasePrice">Purchase Price per tonne (Buy Currency)</label>
+    <div class="input-row">
+      <span id="purchaseSymbol" class="currency-symbol"></span>
+      <input id="purchasePrice" type="number" min="0" value="8200" aria-label="Purchase price"/>
+    </div>
 
-    <div id="fxRate">Exchange Rate (buy → sell): loading...</div>
+    <label for="quantity">Quantity (tonnes)</label>
+    <div class="input-row">
+      <span class="currency-symbol"></span>
+      <input id="quantity" type="number" min="0" value="10" aria-label="Quantity"/>
+    </div>
 
-    <label>Purchase Price per tonne (Buy Currency)</label>
-    <input id="purchasePrice" type="number" value="8200" />
+    <label for="freight">Freight per tonne (Sell Currency)</label>
+    <div class="input-row">
+      <span id="freightSymbol" class="currency-symbol"></span>
+      <input id="freight" type="number" min="0" value="0" aria-label="Freight"/>
+    </div>
 
-    <label>Quantity (tonnes)</label>
-    <input id="quantity" type="number" value="10" />
+    <label for="insurance">Insurance per tonne (Sell Currency)</label>
+    <div class="input-row">
+      <span id="insuranceSymbol" class="currency-symbol"></span>
+      <input id="insurance" type="number" min="0" value="0" aria-label="Insurance"/>
+    </div>
 
-    <label>Freight per tonne (Sell Currency)</label>
-    <input id="freight" type="number" value="0" />
+    <label for="duty">Import Duty per tonne (Sell Currency)</label>
+    <div class="input-row">
+      <span id="dutySymbol" class="currency-symbol"></span>
+      <input id="duty" type="number" min="0" value="0" aria-label="Duty"/>
+    </div>
 
-    <label>Insurance per tonne (Sell Currency)</label>
-    <input id="insurance" type="number" value="0" />
+    <label for="sellingPrice">Selling Price per tonne (Sell Currency)</label>
+    <div class="input-row">
+      <span id="sellingSymbol" class="currency-symbol"></span>
+      <input id="sellingPrice" type="number" min="0" value="8300" aria-label="Selling price"/>
+    </div>
 
-    <label>Import Duty per tonne (Sell Currency)</label>
-    <input id="duty" type="number" value="0" />
-
-    <label>Selling Price per tonne (Sell Currency)</label>
-    <input id="sellingPrice" type="number" value="8300" />
-
-    <label>Payment Terms</label>
-    <select id="paymentTerm">
+    <label for="paymentTerm">Payment Terms</label>
+    <select id="paymentTerm" aria-label="Payment term">
       <option value="FOB">FOB</option>
       <option value="CIF">CIF</option>
       <option value="EXW">EXW</option>
@@ -140,24 +231,66 @@
       <option value="LC90">Letter of Credit (90 Days)</option>
     </select>
 
-    <button onclick="calculate()">Calculate</button>
+    <button id="calcBtn" onclick="calculate()" aria-label="Calculate">Calculate</button>
     <div class="result" id="result"></div>
     <div class="score-output" id="score"></div>
+    <div id="breakdown"></div>
   </div>
 
-  <div class="chart-container">
+  <div class="chart-container" aria-label="FX Rate Trend">
     <h2>FX Rate Trend</h2>
     <canvas id="fxChart" height="300"></canvas>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
+    // --- Currency Symbol Map ---
+    const currencySymbols = {
+      USD: "$",
+      EUR: "€",
+      DKK: "kr",
+      GBP: "£",
+      CAD: "$",
+      NOK: "kr",
+      SEK: "kr",
+      JPY: "¥"
+    };
+
+    // --- Selectors ---
     const buyCurrency = document.getElementById("buyCurrency");
     const sellCurrency = document.getElementById("sellCurrency");
     const fxRateDisplay = document.getElementById("fxRate");
     const fxChartCanvas = document.getElementById("fxChart").getContext("2d");
     const metalSelect = document.getElementById("metal");
 
+    // Currency symbols near inputs
+    const purchaseSymbol = document.getElementById("purchaseSymbol");
+    const freightSymbol = document.getElementById("freightSymbol");
+    const insuranceSymbol = document.getElementById("insuranceSymbol");
+    const dutySymbol = document.getElementById("dutySymbol");
+    const sellingSymbol = document.getElementById("sellingSymbol");
+
+    // Spinners and error elements
+    const fxSpinner = document.getElementById("fxSpinner");
+    const metalSpinner = document.getElementById("metalSpinner");
+    const fxApiError = document.getElementById("fxApiError");
+    const metalApiError = document.getElementById("metalApiError");
+
+    // Inputs
+    const purchaseInput = document.getElementById("purchasePrice");
+    const quantityInput = document.getElementById("quantity");
+    const freightInput = document.getElementById("freight");
+    const insuranceInput = document.getElementById("insurance");
+    const dutyInput = document.getElementById("duty");
+    const sellingInput = document.getElementById("sellingPrice");
+    const calcBtn = document.getElementById("calcBtn");
+
+    // Breakdown and output
+    const breakdownDiv = document.getElementById("breakdown");
+    const resultDiv = document.getElementById("result");
+    const scoreDiv = document.getElementById("score");
+
+    // --- Currency options setup ---
     const currencies = ["USD", "EUR", "DKK", "GBP", "CAD", "NOK", "SEK", "JPY"];
     currencies.forEach(c => {
       buyCurrency.add(new Option(c, c));
@@ -166,30 +299,86 @@
     buyCurrency.value = "USD";
     sellCurrency.value = "DKK";
 
+    // --- State ---
     let fxRate = 1.0;
     let fxChartInstance = null;
+    let lastFxDebounce, lastMetalDebounce;
 
+    // --- Accessibility: input ARIA error states ---
+    function setInvalid(input, invalid) {
+      if (invalid) {
+        input.classList.add("invalid");
+        input.setAttribute("aria-invalid", "true");
+      } else {
+        input.classList.remove("invalid");
+        input.removeAttribute("aria-invalid");
+      }
+    }
+
+    // --- Spinner display helper ---
+    function showSpinner(spinner, show) {
+      spinner.style.display = show ? "inline-block" : "none";
+    }
+
+    // --- Error display helper ---
+    function showApiError(element, msg) {
+      element.style.display = msg ? "block" : "none";
+      element.textContent = msg || "";
+    }
+
+    // --- Currency symbol update ---
+    function updateCurrencySymbols() {
+      purchaseSymbol.textContent = currencySymbols[buyCurrency.value] || buyCurrency.value;
+      [freightSymbol, insuranceSymbol, dutySymbol, sellingSymbol].forEach(sym => {
+        sym.textContent = currencySymbols[sellCurrency.value] || sellCurrency.value;
+      });
+    }
+
+    buyCurrency.onchange = () => { updateCurrencySymbols(); debounceFX(); };
+    sellCurrency.onchange = () => { updateCurrencySymbols(); debounceFX(); };
+    metalSelect.onchange = () => debounceMetal();
+
+    updateCurrencySymbols();
+
+    // --- Debounce helpers ---
+    function debounceFX() {
+      if (lastFxDebounce) clearTimeout(lastFxDebounce);
+      showSpinner(fxSpinner, true);
+      showApiError(fxApiError, "");
+      lastFxDebounce = setTimeout(updateFXRateAndChart, 350);
+    }
+    function debounceMetal() {
+      if (lastMetalDebounce) clearTimeout(lastMetalDebounce);
+      showSpinner(metalSpinner, true);
+      showApiError(metalApiError, "");
+      lastMetalDebounce = setTimeout(getMetalPrice, 350);
+    }
+
+    // --- FX Rate and Chart (with spinner, error) ---
     async function updateFXRateAndChart() {
       const from = buyCurrency.value;
       const to = sellCurrency.value;
+      showSpinner(fxSpinner, true);
+      showApiError(fxApiError, "");
       if (from === to) {
         fxRate = 1.0;
-        fxRateDisplay.textContent = "Exchange Rate: 1.0";
+        fxRateDisplay.childNodes[0].textContent = "Exchange Rate: 1.0";
+        showSpinner(fxSpinner, false);
         if (fxChartInstance) fxChartInstance.destroy();
         return;
       }
-
       try {
         const end = new Date().toISOString().split("T")[0];
         const start = new Date(Date.now() - 10 * 86400000).toISOString().split("T")[0];
         const res = await fetch(`https://api.frankfurter.app/${start}..${end}?from=${from}&to=${to}`);
+        if (!res.ok) throw new Error("API error");
         const data = await res.json();
         const entries = Object.entries(data.rates);
         const labels = entries.map(([date]) => date);
         const values = entries.map(([, val]) => val[to]).filter(v => typeof v === "number");
-        fxRate = values.length ? values.at(-1) : 1.0;
-        fxRateDisplay.textContent = `Exchange Rate (${from} → ${to}): ${fxRate.toFixed(4)}`;
-
+        if (!values.length) throw new Error("No rates data");
+        fxRate = values.at(-1);
+        fxRateDisplay.childNodes[0].textContent = `Exchange Rate (${from} → ${to}): ${fxRate.toFixed(4)}`;
         if (fxChartInstance) fxChartInstance.destroy();
         fxChartInstance = new Chart(fxChartCanvas, {
           type: 'line',
@@ -213,69 +402,141 @@
             }
           }
         });
+        showSpinner(fxSpinner, false);
       } catch (e) {
-        fxRateDisplay.textContent = "Exchange Rate: error";
+        showApiError(fxApiError, "Failed to load FX rates. Please try again.");
+        fxRateDisplay.childNodes[0].textContent = "Exchange Rate: unavailable";
         fxRate = 1.0;
+        if (fxChartInstance) fxChartInstance.destroy();
+        showSpinner(fxSpinner, false);
       }
     }
 
+    // --- Metal Price (with spinner, error) ---
     async function getMetalPrice() {
       const metal = metalSelect.value;
+      showSpinner(metalSpinner, true);
+      showApiError(metalApiError, "");
       try {
         const res = await fetch(`https://api.metalpriceapi.com/v1/latest?api_key=43551205d0f8f8ce6fe40f6e79c3aa0b&base=USD&currencies=${metal}`);
+        if (!res.ok) throw new Error("API error");
         const data = await res.json();
         const price = data.rates?.[metal];
         if (typeof price !== "number" || price <= 0) throw new Error();
-        document.getElementById("livePrice").textContent = `${metal === 'XCU' ? 'Copper' : 'Gold'} Price: ${price.toFixed(2)} USD/t`;
+        document.getElementById("livePrice").childNodes[0].textContent =
+          `${metal === 'XCU' ? 'Copper' : 'Gold'} Price: ${price.toFixed(2)} USD/t`;
+        showSpinner(metalSpinner, false);
       } catch {
-        document.getElementById("livePrice").textContent = "Metal Price: unavailable";
+        showApiError(metalApiError, "Failed to load metal price. Please try again.");
+        document.getElementById("livePrice").childNodes[0].textContent = "Metal Price: unavailable";
+        showSpinner(metalSpinner, false);
       }
     }
 
-    function calculate() {
-      const purchasePrice = parseFloat(document.getElementById("purchasePrice").value);
-      const quantity = parseFloat(document.getElementById("quantity").value);
-      const freight = parseFloat(document.getElementById("freight").value);
-      const insurance = parseFloat(document.getElementById("insurance").value);
-      const duty = parseFloat(document.getElementById("duty").value);
-      const sellingPrice = parseFloat(document.getElementById("sellingPrice").value);
-      const paymentTerm = document.getElementById("paymentTerm").value;
+    // --- Validation logic ---
+    function validateInputs() {
+      let valid = true;
+      [purchaseInput, quantityInput, freightInput, insuranceInput, dutyInput, sellingInput].forEach(inp => {
+        const v = Number(inp.value);
+        if (isNaN(v) || v < 0) {
+          setInvalid(inp, true);
+          valid = false;
+        } else {
+          setInvalid(inp, false);
+        }
+      });
+      return valid;
+    }
 
+    // --- Calculation, logic & breakdown ---
+    function calculate() {
+      // Validate
+      if (!validateInputs()) {
+        resultDiv.textContent = "Please fill all values with valid, non-negative numbers.";
+        resultDiv.className = "result danger";
+        scoreDiv.textContent = "";
+        breakdownDiv.innerHTML = "";
+        return;
+      }
+      // Fetch values
+      const purchasePrice = parseFloat(purchaseInput.value);
+      const quantity = parseFloat(quantityInput.value);
+      const freight = parseFloat(freightInput.value);
+      const insurance = parseFloat(insuranceInput.value);
+      const duty = parseFloat(dutyInput.value);
+      const sellingPrice = parseFloat(sellingInput.value);
+      const paymentTerm = document.getElementById("paymentTerm").value;
+      const metalPriceText = document.getElementById("livePrice").childNodes[0].textContent;
       const fxRateSafe = (typeof fxRate === "number" && !isNaN(fxRate)) ? fxRate : 1.0;
+
+      // Calculations
       const totalCost = (purchasePrice * fxRateSafe + freight + insurance + duty) * quantity;
       const totalRevenue = sellingPrice * quantity;
       const profit = totalRevenue - totalCost;
-      const margin = (profit / totalCost) * 100;
+      const margin = totalCost ? (profit / totalCost) * 100 : 0;
 
-      document.getElementById("result").textContent = `Profit: ${profit.toFixed(2)} | Margin: ${margin.toFixed(2)}%`;
-
+      // Score
       let score = 0;
       if (margin > 20) score += 3;
       else if (margin > 10) score += 2;
       else if (margin > 0) score += 1;
-
       if (paymentTerm.includes("LC")) {
         const days = parseInt(paymentTerm.replace("LC", ""));
         if (days <= 30) score += 2;
         else if (days <= 60) score += 1;
       } else {
-        score += 2; // Favorable terms like FOB, CIF, EXW
+        score += 2;
       }
 
-      let verdict = "";
-      if (score >= 5) verdict = "✅ Strong Trade";
-      else if (score >= 3) verdict = "🟡 Moderate Trade";
-      else verdict = "🔴 Risky Trade";
+      // Verdict & color
+      let verdict = "", color = "";
+      if (score >= 5) { verdict = "✅ Strong Trade"; color = "success";}
+      else if (score >= 3) { verdict = "🟡 Moderate Trade"; color = "warning";}
+      else { verdict = "🔴 Risky Trade"; color = "danger"; }
 
-      document.getElementById("score").textContent = `Trade Score: ${score}/6 — ${verdict}`;
+      resultDiv.textContent = `Profit: ${profit.toFixed(2)} | Margin: ${margin.toFixed(2)}%`;
+      resultDiv.className = "result " + color;
+
+      // Risk flag: margin < 5%
+      let riskFlag = "";
+      if (margin < 5) {
+        riskFlag = `<span class="risk-flag" tabindex="0" title="Margin below 5%.\nThis trade carries higher risk and low reward.">&#9888;</span>`;
+      } else if (margin < 0) {
+        riskFlag = `<span class="risk-flag" tabindex="0" title="Negative margin.\nYou will make a loss at these values.">&#9888;</span>`;
+      }
+
+      scoreDiv.innerHTML = `Trade Score: ${score}/6 — ${verdict} ${riskFlag}`;
+      scoreDiv.className = "score-output " + color;
+
+      // --- Breakdown table ---
+      breakdownDiv.innerHTML = `
+      <table class="breakdown-table" aria-label="Calculation Breakdown">
+        <tr><th>Metal Price</th><td>${metalPriceText}</td></tr>
+        <tr><th>FX Rate</th><td>${fxRateSafe.toFixed(4)} (${buyCurrency.value}→${sellCurrency.value})</td></tr>
+        <tr><th>Purchase Price/tonne</th><td>${currencySymbols[buyCurrency.value] || buyCurrency.value} ${purchasePrice.toLocaleString()}</td></tr>
+        <tr><th>Freight/tonne</th><td>${currencySymbols[sellCurrency.value] || sellCurrency.value} ${freight.toLocaleString()}</td></tr>
+        <tr><th>Insurance/tonne</th><td>${currencySymbols[sellCurrency.value] || sellCurrency.value} ${insurance.toLocaleString()}</td></tr>
+        <tr><th>Duty/tonne</th><td>${currencySymbols[sellCurrency.value] || sellCurrency.value} ${duty.toLocaleString()}</td></tr>
+        <tr><th>Selling Price/tonne</th><td>${currencySymbols[sellCurrency.value] || sellCurrency.value} ${sellingPrice.toLocaleString()}</td></tr>
+        <tr><th>Quantity</th><td>${quantity.toLocaleString()} t</td></tr>
+        <tr><th>Total Cost</th><td><strong>${currencySymbols[sellCurrency.value] || sellCurrency.value} ${totalCost.toLocaleString(undefined, {maximumFractionDigits:2})}</strong></td></tr>
+        <tr><th>Total Revenue</th><td><strong>${currencySymbols[sellCurrency.value] || sellCurrency.value} ${totalRevenue.toLocaleString(undefined, {maximumFractionDigits:2})}</strong></td></tr>
+        <tr><th>Profit</th><td><strong>${currencySymbols[sellCurrency.value] || sellCurrency.value} ${profit.toLocaleString(undefined, {maximumFractionDigits:2})}</strong></td></tr>
+        <tr><th>Margin</th><td><strong>${margin.toFixed(2)}%</strong> ${riskFlag}</td></tr>
+      </table>
+      `;
     }
 
-    buyCurrency.onchange = updateFXRateAndChart;
-    sellCurrency.onchange = updateFXRateAndChart;
-    metalSelect.onchange = getMetalPrice;
+    // --- Input change handlers to remove invalid highlight live ---
+    [purchaseInput, quantityInput, freightInput, insuranceInput, dutyInput, sellingInput].forEach(inp => {
+      inp.addEventListener('input', () => setInvalid(inp, false));
+    });
 
-    updateFXRateAndChart();
-    getMetalPrice();
+    // --- Initial load ---
+    debounceFX();
+    debounceMetal();
+
+    // Accessibility: keyboard focus for risk tooltip (aria-labels already used)
   </script>
 </body>
 </html>
