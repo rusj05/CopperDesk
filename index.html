@@ -28,6 +28,16 @@
       margin-bottom: 20px;
       text-align: center;
     }
+    .helper {
+      font-size: 0.96rem;
+      color: #b2eaff;
+      background: #1c2845;
+      border-radius: 6px;
+      padding: 7px 12px;
+      margin-bottom: 18px;
+      margin-top: -12px;
+      text-align: center;
+    }
     label {
       display: block;
       margin-top: 15px;
@@ -74,37 +84,56 @@
       transition: background 0.2s;
     }
     button:active { background: #00994c; }
-    .tooltip {
-      cursor: help;
+    .tooltip, .explain-link {
+      cursor: pointer;
       text-decoration: underline dotted;
-      position: relative;
-    }
-    .tooltip:hover::after {
-      content: attr(title);
-      position: absolute;
-      background: #333;
-      color: #fff;
-      padding: 8px;
-      font-size: 0.85rem;
-      border-radius: 6px;
-      top: 24px;
-      left: 0;
-      z-index: 100;
-      white-space: pre-line;
-      max-width: 280px;
-    }
-    .loading {
-      display: inline-block;
-      width: 18px; height: 18px;
-      border: 3px solid #fff;
-      border-radius: 50%;
-      border-top: 3px solid #00cc66;
-      animation: spin 0.8s linear infinite;
+      color: #ffe066;
+      margin-left: 6px;
+      font-size: 1.08em;
       vertical-align: middle;
-      margin-left: 8px;
     }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-
+    .explain-link {
+      text-decoration: underline dashed;
+      color: #ffae42;
+    }
+    .info-popup {
+      display: none;
+      position: absolute;
+      background: #222c38;
+      color: #fff;
+      border-radius: 8px;
+      padding: 14px 17px;
+      z-index: 999;
+      max-width: 310px;
+      min-width: 120px;
+      font-size: 0.98em;
+      box-shadow: 0 6px 32px rgba(12,22,32,0.35);
+      margin-top: 8px;
+      border: 1px solid #315585;
+    }
+    .info-popup.visible { display: block; }
+    .info-popup .close-popup {
+      color: #ffe066;
+      float: right;
+      cursor: pointer;
+      margin-left: 12px;
+      font-size: 1.05em;
+    }
+    .explanation-section {
+      background: #1b2a36;
+      border-radius: 7px;
+      margin-top: 20px;
+      padding: 12px 14px;
+      color: #d8fdff;
+      font-size: 0.98em;
+    }
+    .explanation-section summary {
+      color: #ffe066;
+      cursor: pointer;
+      font-weight: bold;
+      margin-bottom: 7px;
+      font-size: 1.07em;
+    }
     .result, .score-output {
       margin-top: 20px;
       font-size: 1.08rem;
@@ -172,8 +201,19 @@
 </head>
 <body>
   <div class="panel" aria-label="CopperDesk Trade Panel">
-    <h1>CopperDesk</h1>
-    <label for="metal">Select Metal</label>
+    <h1>
+      CopperDesk 
+      <span class="tooltip" data-info="general">ℹ</span>
+    </h1>
+    <div class="helper">
+      <b>Quickly analyse your trade and FX health.</b> 
+      <span class="explain-link" data-info="howitworks">(How does this work?)</span>
+    </div>
+
+    <label for="metal">
+      Select Metal 
+      <span class="tooltip" title="Choose which metal you're buying or selling. Live prices update below." data-info="metal">ℹ</span>
+    </label>
     <select id="metal" aria-label="Metal type">
       <option value="XCU">Copper</option>
       <option value="XAU">Gold</option>
@@ -184,75 +224,109 @@
     <span id="metalApiError" class="api-error" style="display:none;"></span>
 
     <label for="buyCurrency">
-      Buy Currency <span class="tooltip" title="Currency used to buy the metal (e.g. USD)">ℹ</span>
+      Buy Currency 
+      <span class="tooltip" title="The currency you use to purchase the metal. Used for cost calculation and FX conversion." data-info="buycur">ℹ</span>
     </label>
     <select id="buyCurrency" aria-label="Buy currency"></select>
 
     <label for="sellCurrency">
-      Sell Currency <span class="tooltip" title="Currency you sell or invoice in (e.g. EUR)">ℹ</span>
+      Sell Currency 
+      <span class="tooltip" title="The currency you receive or invoice in. Used to calculate profit, margin, and risk." data-info="sellcur">ℹ</span>
     </label>
     <select id="sellCurrency" aria-label="Sell currency"></select>
     <div id="fxRate">
       Exchange Rate (buy → sell): loading... <span id="fxSpinner" class="loading" style="display:inline-block;"></span>
+      <span class="tooltip" data-info="fxrate">ℹ</span>
     </div>
     <span id="fxApiError" class="api-error" style="display:none;"></span>
 
-    <label for="purchasePrice">Purchase Price per tonne (Buy Currency)</label>
+    <label for="purchasePrice">
+      Purchase Price per tonne (Buy Currency)
+      <span class="tooltip" data-info="purchasePrice">ℹ</span>
+    </label>
     <div class="input-row">
       <span id="purchaseSymbol" class="currency-symbol"></span>
       <input id="purchasePrice" type="number" min="0" value="8200" aria-label="Purchase price"/>
     </div>
 
-    <label for="quantity">Quantity (tonnes)</label>
+    <label for="quantity">
+      Quantity (tonnes)
+      <span class="tooltip" data-info="quantity">ℹ</span>
+    </label>
     <div class="input-row">
       <span class="currency-symbol"></span>
       <input id="quantity" type="number" min="0" value="10" aria-label="Quantity"/>
     </div>
 
-    <label for="freight">Freight per tonne (Sell Currency)</label>
+    <label for="freight">
+      Freight per tonne (Sell Currency)
+      <span class="tooltip" data-info="freight">ℹ</span>
+    </label>
     <div class="input-row">
       <span id="freightSymbol" class="currency-symbol"></span>
       <input id="freight" type="number" min="0" value="0" aria-label="Freight"/>
     </div>
 
-    <label for="insurance">Insurance per tonne (Sell Currency)</label>
+    <label for="insurance">
+      Insurance per tonne (Sell Currency)
+      <span class="tooltip" data-info="insurance">ℹ</span>
+    </label>
     <div class="input-row">
       <span id="insuranceSymbol" class="currency-symbol"></span>
       <input id="insurance" type="number" min="0" value="0" aria-label="Insurance"/>
     </div>
 
-    <label for="duty">Import Duty per tonne (Sell Currency)</label>
+    <label for="duty">
+      Import Duty per tonne (Sell Currency)
+      <span class="tooltip" data-info="duty">ℹ</span>
+    </label>
     <div class="input-row">
       <span id="dutySymbol" class="currency-symbol"></span>
       <input id="duty" type="number" min="0" value="0" aria-label="Duty"/>
     </div>
 
-    <label for="sellingPrice">Selling Price per tonne (Sell Currency)</label>
+    <label for="sellingPrice">
+      Selling Price per tonne (Sell Currency)
+      <span class="tooltip" data-info="sellingPrice">ℹ</span>
+    </label>
     <div class="input-row">
       <span id="sellingSymbol" class="currency-symbol"></span>
       <input id="sellingPrice" type="number" min="0" value="8300" aria-label="Selling price"/>
     </div>
 
-    <label for="paymentTerm">Payment Terms</label>
-    <select id="paymentTerm" aria-label="Payment term">
-      <option value="FOB">FOB</option>
-      <option value="CIF">CIF</option>
-      <option value="EXW">EXW</option>
-      <option value="LC30">Letter of Credit (30 Days)</option>
-      <option value="LC60">Letter of Credit (60 Days)</option>
-      <option value="LC90">Letter of Credit (90 Days)</option>
-    </select>
+    <label for="paymentTerm">
+      Payment Terms (Incoterm)
+      <span class="tooltip" data-info="incoterm">ℹ</span>
+    </label>
+    <select id="paymentTerm" aria-label="Payment term"></select>
+    <div id="incotermDesc" class="helper" style="display:none;"></div>
 
     <button id="calcBtn" onclick="calculate()" aria-label="Calculate">Calculate</button>
     <div class="result" id="result"></div>
     <div class="score-output" id="score"></div>
     <div id="breakdown"></div>
+
+    <details class="explanation-section" id="outputExplain" open>
+      <summary>What do these results mean?</summary>
+      <div>
+        <b>Profit:</b> Your estimated profit for the whole trade.<br/>
+        <b>Margin:</b> Percentage of profit vs. cost.<br/>
+        <b>Trade Score:</b> Shows risk and health based on your margin and payment terms.<br/>
+        <b>Risk Warnings:</b> If margin is low, you may want to review your costs or sales price.<br/>
+      </div>
+    </details>
   </div>
 
   <div class="chart-container" aria-label="FX Rate Trend">
-    <h2>FX Rate Trend</h2>
+    <h2>
+      FX Rate Trend 
+      <span class="tooltip" data-info="chart">ℹ</span>
+    </h2>
     <canvas id="fxChart" height="70"></canvas>
   </div>
+
+  <!-- Info Popups for Tooltips -->
+  <div id="infoPopups"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
@@ -268,12 +342,58 @@
       JPY: "¥"
     };
 
+    // --- Incoterms Definitions ---
+    const incoterms = [
+      { value: "FOB", label: "FOB (Free On Board)", desc: "Seller delivers goods on board vessel at port of shipment. Buyer bears all costs and risks after loading." },
+      { value: "CIF", label: "CIF (Cost, Insurance, Freight)", desc: "Seller pays for cost, insurance, freight to named port. Risk passes to buyer when goods loaded on vessel." },
+      { value: "EXW", label: "EXW (Ex Works)", desc: "Buyer bears all costs/risk from seller's premises onwards." },
+      { value: "DAP", label: "DAP (Delivered at Place)", desc: "Seller delivers to a named place. Buyer pays for import duties/taxes." },
+      { value: "DDP", label: "DDP (Delivered Duty Paid)", desc: "Seller responsible for all costs and risks, including duties/taxes, to deliver at destination." },
+      { value: "FCA", label: "FCA (Free Carrier)", desc: "Seller delivers goods to carrier or other person nominated by buyer at seller’s premises or another named place." },
+      { value: "CPT", label: "CPT (Carriage Paid To)", desc: "Seller pays freight to named place. Risk transfers once delivered to first carrier." },
+      { value: "CIP", label: "CIP (Carriage and Insurance Paid To)", desc: "Seller pays freight/insurance to destination. Risk passes to buyer at carrier handover." },
+      { value: "FAS", label: "FAS (Free Alongside Ship)", desc: "Seller delivers alongside ship at named port. Buyer bears costs/risk from that point." },
+      { value: "CFR", label: "CFR (Cost and Freight)", desc: "Seller pays costs/freight to port. Risk passes when goods loaded on vessel." },
+      { value: "DAT", label: "DAT (Delivered at Terminal)", desc: "Seller delivers to named terminal at destination. Buyer pays import duties." },
+      // LC options
+      { value: "LC30", label: "Letter of Credit (30 Days)", desc: "Payment via letter of credit, payable 30 days after shipment/documents." },
+      { value: "LC60", label: "Letter of Credit (60 Days)", desc: "Payment via letter of credit, payable 60 days after shipment/documents." },
+      { value: "LC90", label: "Letter of Credit (90 Days)", desc: "Payment via letter of credit, payable 90 days after shipment/documents." }
+    ];
+
+    // --- Info explanations ---
+    const infoData = {
+      general: "CopperDesk helps you estimate the profit, risk, and FX impact of a metal trade, including real-time prices and currency rates.",
+      howitworks: `
+        <b>How CopperDesk works:</b><br>
+        1. Enter your costs, prices, and payment terms.<br>
+        2. Get live market prices and FX rates.<br>
+        3. Calculate profit, margin, and risk.<br>
+        4. Review warnings and breakdowns to optimise your trade.<br>
+      `,
+      metal: "Select the metal to get live international prices. Supported: Copper and Gold.",
+      buycur: "The currency you will pay to purchase the metal.",
+      sellcur: "The currency you will receive, or use for sales/invoice.",
+      fxrate: "Current exchange rate from Buy to Sell currency. Used to convert your cost to the sales currency.",
+      purchasePrice: "How much you pay (per tonne) for the metal, in the buy currency.",
+      quantity: "Number of tonnes for this trade.",
+      freight: "Transport cost per tonne, paid in sell currency.",
+      insurance: "Insurance cost per tonne, in sell currency.",
+      duty: "Import duty per tonne (in sell currency).",
+      sellingPrice: "How much you sell per tonne for, in the sell currency.",
+      incoterm: "Payment and delivery terms. Hover or click for description. Incoterms define who pays for what and when risk transfers.",
+      chart: "Shows FX rate movement for your selected currency pair in the last 10 days."
+    };
+
     // --- Selectors ---
     const buyCurrency = document.getElementById("buyCurrency");
     const sellCurrency = document.getElementById("sellCurrency");
     const fxRateDisplay = document.getElementById("fxRate");
     const fxChartCanvas = document.getElementById("fxChart").getContext("2d");
     const metalSelect = document.getElementById("metal");
+    const paymentTerm = document.getElementById("paymentTerm");
+    const incotermDesc = document.getElementById("incotermDesc");
+    const infoPopups = document.getElementById("infoPopups");
 
     // Currency symbols near inputs
     const purchaseSymbol = document.getElementById("purchaseSymbol");
@@ -310,6 +430,22 @@
     });
     buyCurrency.value = "USD";
     sellCurrency.value = "DKK";
+
+    // --- Incoterm options ---
+    incoterms.forEach(opt => paymentTerm.add(new Option(opt.label, opt.value)));
+    paymentTerm.value = "FOB";
+    // Show incoterm description on select
+    function showIncotermDesc() {
+      const sel = incoterms.find(opt => opt.value === paymentTerm.value);
+      if (sel) {
+        incotermDesc.style.display = "block";
+        incotermDesc.textContent = sel.desc;
+      } else {
+        incotermDesc.style.display = "none";
+      }
+    }
+    paymentTerm.onchange = showIncotermDesc;
+    showIncotermDesc();
 
     // --- State ---
     let fxRate = 1.0;
@@ -491,7 +627,9 @@
       const insurance = parseFloat(insuranceInput.value);
       const duty = parseFloat(dutyInput.value);
       const sellingPrice = parseFloat(sellingInput.value);
-      const paymentTerm = document.getElementById("paymentTerm").value;
+      const selIncoterm = incoterms.find(opt => opt.value === paymentTerm.value);
+      const paymentLabel = selIncoterm ? selIncoterm.label : paymentTerm.value;
+      const paymentDesc = selIncoterm ? selIncoterm.desc : "";
       const metalPriceText = document.getElementById("livePrice").childNodes[0].textContent;
       const fxRateSafe = (typeof fxRate === "number" && !isNaN(fxRate)) ? fxRate : 1.0;
 
@@ -506,8 +644,8 @@
       if (margin > 20) score += 3;
       else if (margin > 10) score += 2;
       else if (margin > 0) score += 1;
-      if (paymentTerm.includes("LC")) {
-        const days = parseInt(paymentTerm.replace("LC", ""));
+      if (paymentTerm.value.includes("LC")) {
+        const days = parseInt(paymentTerm.value.replace("LC", ""));
         if (days <= 30) score += 2;
         else if (days <= 60) score += 1;
       } else {
@@ -520,7 +658,11 @@
       else if (score >= 3) { verdict = "🟡 Moderate Trade"; color = "warning";}
       else { verdict = "🔴 Risky Trade"; color = "danger"; }
 
-      resultDiv.textContent = `Profit: ${profit.toFixed(2)} | Margin: ${margin.toFixed(2)}%`;
+      resultDiv.innerHTML = `
+        <b>Profit:</b> <span title="Total revenue minus all costs">${profit.toLocaleString(undefined,{maximumFractionDigits:2})}</span> &nbsp;|&nbsp;
+        <b>Margin:</b> <span title="(Profit / Total Cost) x 100">${margin.toFixed(2)}%</span>
+        <span class="explain-link" data-info="margin">(What is this?)</span>
+      `;
       resultDiv.className = "result " + color;
 
       // Risk flag: margin < 5%
@@ -531,7 +673,13 @@
         riskFlag = `<span class="risk-flag" tabindex="0" title="Negative margin.\nYou will make a loss at these values.">&#9888;</span>`;
       }
 
-      scoreDiv.innerHTML = `Trade Score: ${score}/6 — ${verdict} ${riskFlag}`;
+      scoreDiv.innerHTML = `
+        <b>Trade Score:</b> ${score}/6 — <b>${verdict}</b> ${riskFlag}<br>
+        <span style="font-weight:normal; color:#ffe066;">
+        Payment: <u title="${paymentDesc}">${paymentLabel}</u>
+        </span>
+        <span class="explain-link" data-info="tradescore">(Explain)</span>
+      `;
       scoreDiv.className = "score-output " + color;
 
       // --- Breakdown table ---
@@ -558,9 +706,59 @@
       inp.addEventListener('input', () => setInvalid(inp, false));
     });
 
+    // --- Tooltip/Explain info popup logic ---
+    function showInfoPopup(e, content) {
+      let popup = document.createElement('div');
+      popup.className = 'info-popup visible';
+      popup.innerHTML = `<span class="close-popup" title="Close">×</span>${content}`;
+      popup.style.top = (e.clientY + window.scrollY + 12) + "px";
+      popup.style.left = (e.clientX + window.scrollX - 10) + "px";
+      infoPopups.appendChild(popup);
+      function close() { popup.remove(); }
+      popup.querySelector('.close-popup').onclick = close;
+      setTimeout(() => {
+        document.addEventListener('click', function removeDocClick(ev) {
+          if (!popup.contains(ev.target)) {
+            close();
+            document.removeEventListener('click', removeDocClick);
+          }
+        });
+      }, 0);
+    }
+    function addPopupListeners() {
+      document.querySelectorAll('.tooltip, .explain-link').forEach(el => {
+        el.onclick = e => {
+          e.stopPropagation();
+          let info = el.getAttribute('data-info');
+          if (info && infoData[info]) showInfoPopup(e, infoData[info]);
+        };
+      });
+    }
+    // Add margin/tradescore explanations
+    infoData.margin = `<b>Margin</b> = (Profit / Total Cost) × 100<br>
+      Margin tells you the percentage of your revenue that is profit. A higher margin generally means a healthier trade.<br>
+      <b>Margin under 5%</b> is flagged as risky.`;
+    infoData.tradescore = `<b>Trade Score</b> = (Margin + Payment terms) health.<br>
+      A higher score indicates more favorable conditions and lower risk.<br>
+      Payment via Letters of Credit (LC) increases risk the longer the payment delay.`;
+
+    // Add output explanations for first load and after calc
+    addPopupListeners();
+
     // --- Initial load ---
     debounceFX();
     debounceMetal();
+
+    // Show info popups on hover for tooltips (optional: only for desktop)
+    document.querySelectorAll('.tooltip').forEach(el => {
+      el.addEventListener('mouseenter', e => {
+        let info = el.getAttribute('data-info');
+        if (info && infoData[info]) showInfoPopup(e, infoData[info]);
+      });
+    });
+
+    // Re-attach popup listeners after calculation
+    calcBtn.addEventListener('click', () => setTimeout(addPopupListeners, 200));
 
     // Accessibility: keyboard focus for risk tooltip (aria-labels already used)
   </script>
