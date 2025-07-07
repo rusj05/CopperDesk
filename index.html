@@ -150,9 +150,15 @@
     }
     .chart-container canvas {
       width: 100% !important;
-      max-height: 160px !important;
       height: auto !important;
+      max-height: 140px !important;
       margin-top: 8px;
+      display: block;
+    }
+    @media (min-width: 700px) {
+      .chart-container canvas {
+        max-height: 68px !important;
+      }
     }
     @media (min-width: 800px) {
       body {
@@ -245,7 +251,7 @@
 
   <div class="chart-container" aria-label="FX Rate Trend">
     <h2>FX Rate Trend</h2>
-    <canvas id="fxChart" height="140"></canvas>
+    <canvas id="fxChart" height="70"></canvas>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -360,6 +366,11 @@
       lastMetalDebounce = setTimeout(getMetalPrice, 350);
     }
 
+    // --- Responsive aspect ratio ---
+    function getAspectRatio() {
+      return window.innerWidth > 700 ? 5 : 2.2;
+    }
+
     // --- FX Rate and Chart (with spinner, error) ---
     async function updateFXRateAndChart() {
       const from = buyCurrency.value;
@@ -401,7 +412,7 @@
           options: {
             responsive: true,
             maintainAspectRatio: true,
-            aspectRatio: 2.2,
+            aspectRatio: getAspectRatio(),
             plugins: { legend: { labels: { color: '#fff' } } },
             scales: {
               x: { ticks: { color: '#fff' } },
@@ -418,6 +429,14 @@
         showSpinner(fxSpinner, false);
       }
     }
+
+    // --- Responsive resizing for aspect ratio ---
+    window.addEventListener('resize', () => {
+      if (fxChartInstance) {
+        fxChartInstance.options.aspectRatio = getAspectRatio();
+        fxChartInstance.resize();
+      }
+    });
 
     // --- Metal Price (with spinner, error) ---
     async function getMetalPrice() {
