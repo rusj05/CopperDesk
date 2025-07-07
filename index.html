@@ -16,7 +16,7 @@
       gap: 20px;
       align-items: center;
     }
-    .panel, .chart-container, .tips-container, .glossary-container {
+    .panel, .chart-container {
       background: #111;
       padding: 20px;
       border-radius: 12px;
@@ -56,11 +56,6 @@
     }
     button:hover {
       background-color: #00b359;
-    }
-    .result, .score-output {
-      margin-top: 20px;
-      font-size: 1rem;
-      line-height: 1.6;
     }
     .tooltip {
       cursor: help;
@@ -105,35 +100,6 @@
     <select id="sellCurrency"></select>
 
     <div id="fxRate">Exchange Rate (buy → sell): loading...</div>
-
-    <label>Purchase Price per tonne <span class="tooltip" title="How much you pay per tonne of copper in Buy Currency">🛈</span></label>
-    <input type="number" id="purchasePrice" min="0" step="0.01" />
-
-    <label>Quantity (tonnes)</label>
-    <input type="number" id="quantity" min="0" step="0.01" />
-
-    <label>Bank Conversion Rate <span class="tooltip" title="Your bank's rate for converting Buy to Sell currency">🛈</span></label>
-    <input type="number" id="bankRate" min="0" step="0.0001" />
-
-    <label>Freight per tonne <span class="tooltip" title="Cost of transporting 1 tonne in Sell Currency">🛈</span></label>
-    <input type="number" id="freight" min="0" step="0.01" />
-
-    <label>Insurance per tonne <span class="tooltip" title="Insurance cost per tonne in Sell Currency">🛈</span></label>
-    <input type="number" id="insurance" min="0" step="0.01" />
-
-    <label>Import Duty per tonne <span class="tooltip" title="Tax or duty per tonne in Sell Currency">🛈</span></label>
-    <input type="number" id="duty" min="0" step="0.01" />
-
-    <label>Selling Price per tonne <span class="tooltip" title="Selling price per tonne in Sell Currency">🛈</span></label>
-    <input type="number" id="sellPrice" min="0" step="0.01" />
-
-    <label>Payment Terms <span class="tooltip" title="E.g. advance, 30 days, LC at sight">🛈</span></label>
-    <input type="text" id="paymentTerms" placeholder="e.g. 30 days, LC at sight" />
-
-    <button id="calcBtn">Calculate</button>
-    <div class="result" id="results"></div>
-    <div class="score-output" id="tradeScore"></div>
-    <button id="exportBtn">Download Trade Log (CSV)</button>
   </div>
 
   <div class="chart-container">
@@ -146,7 +112,7 @@
     const buyCurrency = document.getElementById("buyCurrency");
     const sellCurrency = document.getElementById("sellCurrency");
     const fxRateDisplay = document.getElementById("fxRate");
-    const fxChart = document.getElementById("fxChart").getContext("2d");
+    const fxChartCanvas = document.getElementById("fxChart").getContext("2d");
 
     const currencies = ["USD", "EUR", "DKK", "GBP", "CAD", "NOK", "SEK", "JPY"];
     currencies.forEach(c => {
@@ -156,13 +122,22 @@
     buyCurrency.value = "USD";
     sellCurrency.value = "DKK";
 
+    let fxChartInstance = null;
+
     async function updateFXRateAndChart() {
       const from = buyCurrency.value;
       const to = sellCurrency.value;
-      if (from === to) return fxRateDisplay.textContent = "Exchange Rate: 1.0";
+      if (from === to) {
+        fxRateDisplay.textContent = "Exchange Rate: 1.0";
+        if (fxChartInstance) fxChartInstance.destroy();
+        return;
+      }
 
       try {
-        const res = await fetch(`https://api.frankfurter.app/2024-06-24..?from=${from}&to=${to}`);
+        const end = new Date().toISOString().split("T")[0];
+        const start = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+        const res = await fetch(`https://api.frankfurter.app/${start}..${end}?from=${from}&to=${to}`);
         const data = await res.json();
         const entries = Object.entries(data.rates);
         const labels = entries.map(([date]) => date);
@@ -170,7 +145,8 @@
 
         fxRateDisplay.textContent = `Exchange Rate (${from} → ${to}): ${values.at(-1).toFixed(4)}`;
 
-        new Chart(fxChart, {
+        if (fxChartInstance) fxChartInstance.destroy();
+        fxChartInstance = new Chart(fxChartCanvas, {
           type: 'line',
           data: {
             labels: labels,
@@ -198,6 +174,7 @@
         fxRateDisplay.textContent = "Exchange Rate: error";
       }
     }
+
     buyCurrency.onchange = updateFXRateAndChart;
     sellCurrency.onchange = updateFXRateAndChart;
     updateFXRateAndChart();
@@ -214,8 +191,7 @@
 
     getCopperPrice().then(price => {
       const el = document.getElementById("livePrice");
-      if (price > 0) el.textContent = `Copper Price: ${price.toFixed(2)} USD/t`;
-      else el.textContent = "Copper Price: unavailable";
+      el.textContent = price > 0 ? `Copper Price: ${price.toFixed(2)} USD/t` : "Copper Price: unavailable";
     });
   </script>
 </body>
