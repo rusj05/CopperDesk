@@ -130,7 +130,7 @@
     <button id="calcBtn">Calculate</button>
     <div class="result" id="results"></div>
     <div class="score-output" id="tradeScore"></div>
-    <button id="exportBtn">📅 Download Trade Log (CSV)</button>
+    <button id="exportBtn">📥 Download Trade Log (CSV)</button>
   </div>
 
   <div class="chart-container">
@@ -157,5 +157,139 @@
       <li><strong>Freight:</strong> Cost of shipping copper per tonne.</li>
     </ul>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const buySelect = document.getElementById("buyCurrency");
+    const sellSelect = document.getElementById("sellCurrency");
+    const freightEstimate = document.getElementById("freightEstimate");
+    const freightInput = document.getElementById("freight");
+
+    const currencies = ["USD", "EUR", "DKK", "GBP", "CAD", "NOK", "SEK", "JPY"];
+    currencies.forEach(c => {
+      buySelect.add(new Option(c, c));
+      sellSelect.add(new Option(c, c));
+    });
+    buySelect.value = "USD";
+    sellSelect.value = "DKK";
+
+    freightEstimate.addEventListener("change", () => {
+      freightInput.value = freightEstimate.value;
+    });
+
+    async function updateFXRate() {
+      const from = buySelect.value;
+      const to = sellSelect.value;
+      const el = document.getElementById("fxRate");
+      if (from === to) return (el.textContent = "Exchange Rate: 1.0");
+      try {
+        const res = await fetch(`https://api.frankfurter.app/latest?from=${from}&to=${to}`);
+        const data = await res.json();
+        el.textContent = `Exchange Rate (${from} → ${to}): ${data.rates[to].toFixed(4)}`;
+      } catch {
+        el.textContent = "Exchange Rate: error";
+      }
+    }
+    buySelect.onchange = updateFXRate;
+    sellSelect.onchange = updateFXRate;
+    updateFXRate();
+
+    async function getCopperPriceUSD() {
+      try {
+        const res = await fetch("https://api.metalpriceapi.com/v1/latest?base=USD&symbols=COPPER&apikey=43551205d0f8f8ce6fe40f6e79c3aa0b");
+        const data = await res.json();
+        return data.rates?.COPPER ?? 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    const tradeLog = [];
+    document.getElementById("calcBtn").addEventListener("click", async () => {
+      const qty = parseFloat(document.getElementById("quantity").value || "0");
+      const bankRate = parseFloat(document.getElementById("bankRate").value || "1");
+      const purchasePrice = parseFloat(document.getElementById("purchasePrice").value || "0");
+      const sellPrice = parseFloat(document.getElementById("sellPrice").value || "0");
+      const freight = parseFloat(document.getElementById("freight").value || "0");
+      const insurance = parseFloat(document.getElementById("insurance").value || "0");
+      const duty = parseFloat(document.getElementById("duty").value || "0");
+      const paymentTerms = document.getElementById("paymentTerms").value || "N/A";
+
+      const copperPriceUSD = await getCopperPriceUSD();
+      document.getElementById("livePrice").textContent = `Copper Price: ${copperPriceUSD.toFixed(2)} USD/t`;
+
+      const convertedPurchase = purchasePrice * bankRate;
+      const totalCostPerTonne = convertedPurchase + freight + insurance + duty;
+      const totalCost = totalCostPerTonne * qty;
+      const totalRevenue = sellPrice * qty;
+      const profit = totalRevenue - totalCost;
+      const margin = totalCost ? (profit / totalCost) * 100 : 0;
+      const breakevenRate = purchasePrice > 0 ? (sellPrice - freight - insurance - duty) / purchasePrice : 0;
+
+      document.getElementById("results").innerHTML =
+        `Total Cost: ${totalCost.toFixed(2)}<br>Revenue: ${totalRevenue.toFixed(2)}<br>` +
+        `Profit: ${profit.toFixed(2)}<br>Margin: ${margin.toFixed(2)} %<br>` +
+        `Breakeven FX Rate: ${breakevenRate.toFixed(4)}`;
+
+      const score = Math.min(100, Math.max(0, margin + (paymentTerms.includes("advance") ? 10 : -5)));
+      document.getElementById("tradeScore").innerHTML = `Trade Health Score: <strong>${score.toFixed(0)} / 100</strong>`;
+
+      tradeLog.push({
+        Date: new Date().toISOString().split("T")[0],
+        Quantity: qty,
+        PurchasePrice: purchasePrice,
+        BankRate: bankRate,
+        ConvertedPurchase: convertedPurchase,
+        TotalCost: totalCost,
+        SellPrice: sellPrice,
+        Profit: profit,
+        Margin: margin.toFixed(2),
+        BreakevenRate: breakevenRate.toFixed(4),
+        PaymentTerms: paymentTerms
+      });
+    });
+
+    document.getElementById("exportBtn").addEventListener("click", () => {
+      const csvRows = [];
+      const headers = Object.keys(tradeLog[0]);
+      csvRows.push(headers.join(","));
+      for (const row of tradeLog) {
+        const values = headers.map(h => JSON.stringify(row[h] ?? ""));
+        csvRows.push(values.join(","));
+      }
+      const blob = new Blob([csvRows.join("\n")], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "copper_trade_log.csv";
+      a.click();
+    });
+
+    const ctx = document.getElementById("copperChart").getContext("2d");
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+        datasets: [{
+          label: 'Copper Price (USD)',
+          data: [8250, 8300, 8280, 8320, 8340],
+          borderColor: '#00ff99',
+          borderWidth: 2,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#fff' } }
+        },
+        scales: {
+          x: { ticks: { color: '#fff' } },
+          y: { ticks: { color: '#fff' } }
+        }
+      }
+    });
+  </script>
 </body>
 </html>
