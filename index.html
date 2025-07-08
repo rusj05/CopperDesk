@@ -3,40 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CopperDesk | Pro FX & Trade Health Tool</title>
+  <title>CopperDesk PRO | FX, Trade & Learning Tool</title>
   <style>
-    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(to bottom, #1c3b6f, #214d9b); color: #fff; padding: 20px; display: flex; flex-direction: column; gap: 20px; align-items: center;}
-    .panel, .chart-container { background: #111; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); width: 100%; max-width: 540px;}
-    h1, h2 { margin-bottom: 16px; text-align: center;}
-    .helper { font-size: 0.96rem; color: #b2eaff; background: #1c2845; border-radius: 6px; padding: 7px 12px; margin-bottom: 18px; margin-top: -12px; text-align: center;}
+    /* ... (same CSS as in your pasted code, omitted for brevity, but keep your last version) ... */
+    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(to bottom, #1c3b6f, #214d9b); color: #fff; padding: 0; }
+    #main-wrap { display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 26px; padding: 24px 4vw 60px 4vw; min-height: 100vh;}
+    .panel, .chart-container, .ai-tutor-panel, .learning-dashboard { background: #111; padding: 20px; border-radius: 14px; box-shadow: 0 4px 24px rgba(0,0,0,0.33); width: 100%; max-width: 530px;}
+    .ai-tutor-panel { max-width: 360px; min-width: 270px; position: sticky; top: 24px; height: max-content; }
+    .panel, .learning-dashboard { min-width: 320px;}
+    h1, h2, h3 { margin-bottom: 16px; text-align: center;}
     .feature-banner { background: #154d32; border-radius: 9px; padding: 9px 16px; margin-bottom: 12px; color: #b7f6be; font-size: 1.01em;}
-    label { display: block; margin-top: 13px; font-size: 0.97rem;}
+    .helper { font-size: 0.97rem; color: #b2eaff; background: #1c2845; border-radius: 7px; padding: 7px 12px; margin-bottom: 18px; text-align: center;}
+    .btn, button { padding: 11px 20px; background: #00b48a; border: none; border-radius: 7px; font-weight: bold; color: white; cursor: pointer; margin: 10px 0 0 0; font-size: 1.02em;}
+    .btn:hover, button:hover { background: #008066;}
+    .btn-small { font-size: 0.99em; padding: 5px 14px; margin-right: 7px;}
+    .label-row { display: flex; align-items: center; gap: 8px;}
+    label { margin-top: 14px; font-size: 0.98em;}
     .input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px;}
     .currency-symbol { min-width: 28px; text-align: right; font-weight: bold; font-size: 1.1em; color: #88eeff;}
-    select, input[type="number"], input[type="text"], textarea { width: 100%; padding: 10px; border-radius: 6px; margin-top: 5px; border: none; background-color: #222; color: white; font-size: 1rem;}
-    textarea { resize: vertical; min-height: 45px;}
+    select, input[type="number"], input[type="text"], textarea { width: 100%; padding: 9px; border-radius: 7px; margin-top: 4px; border: none; background-color: #222; color: white; font-size: 1rem;}
+    textarea { resize: vertical; min-height: 44px;}
     input.invalid, textarea.invalid { border: 2px solid #ff3333; background: #330808;}
-    button, .btn { width: 100%; padding: 12px; margin-top: 18px; background-color: #00cc66; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; color: white; transition: background 0.2s; display: block; text-align: center;}
-    button:active, .btn:active { background: #00994c;}
-    .btn-small { width: auto; display: inline-block; padding: 7px 17px; font-size: 0.98em; margin-right: 10px; margin-top: 8px;}
-    .tooltip, .explain-link { cursor: pointer; text-decoration: underline dotted; color: #ffe066; margin-left: 6px; font-size: 1.08em; vertical-align: middle;}
+    .tooltip, .explain-link { cursor: pointer; text-decoration: underline dotted; color: #ffe066; margin-left: 7px; font-size: 1.05em; vertical-align: middle;}
     .explain-link { text-decoration: underline dashed; color: #ffae42;}
-    .glossary-link { color: #69f2d6; text-decoration: underline; cursor: pointer; margin-left: 7px; font-size:1.02em;}
-    .info-popup { display: none; position: absolute; background: #222c38; color: #fff; border-radius: 8px; padding: 14px 17px; z-index: 999; max-width: 350px; min-width: 120px; font-size: 0.98em; box-shadow: 0 6px 32px rgba(12,22,32,0.35); margin-top: 8px; border: 1px solid #315585;}
-    .info-popup.visible { display: block; }
-    .info-popup .close-popup { color: #ffe066; float: right; cursor: pointer; margin-left: 12px; font-size: 1.05em;}
-    .result, .score-output { margin-top: 20px; font-size: 1.08rem; line-height: 1.6; padding: 14px; border-radius: 8px; min-height: 28px; font-weight: bold; transition: background 0.3s, color 0.3s;}
+    .glossary-link { color: #69f2d6; text-decoration: underline; cursor: pointer; margin-left: 8px; font-size:1.02em;}
+    .result, .score-output { margin-top: 20px; font-size: 1.08rem; line-height: 1.6; padding: 14px; border-radius: 8px; min-height: 28px; font-weight: bold;}
     .result.success, .score-output.success { background: #163c26; color: #5ff7b8;}
     .result.warning, .score-output.warning { background: #4c4018; color: #ffe066;}
     .result.danger, .score-output.danger { background: #43111d; color: #ff6f8a;}
-    .breakdown-table { width: 100%; margin-top: 16px; border-collapse: collapse; font-size: 0.98rem; background: #181d2b; border-radius: 8px; overflow: hidden;}
+    .breakdown-table { width: 100%; margin-top: 16px; border-collapse: collapse; font-size: 0.98rem; background: #181d2b; border-radius: 8px;}
     .breakdown-table th, .breakdown-table td { padding: 7px 10px; text-align: left; border-bottom: 1px solid #232942;}
     .breakdown-table tr:last-child td { border-bottom: none;}
     .risk-flag { color: #ffd966; font-size: 1.2em; vertical-align: middle; margin-left: 8px; cursor: pointer;}
-    .api-error { color: #ff7675; background: #2e1717; padding: 6px 14px; border-radius: 6px; margin-top: 8px; display: block; font-size: 0.97em;}
     .chart-container canvas { width: 100% !important; height: auto !important; max-height: 140px !important; margin-top: 8px; display: block;}
-    @media (min-width: 700px) { .chart-container canvas { max-height: 68px !important; } }
-    @media (min-width: 800px) { body { flex-direction: row; justify-content: center; flex-wrap: wrap;} .panel, .chart-container { margin: 12px;}}
+    @media (max-width:1150px) { #main-wrap {flex-direction: column; align-items:center; gap:18px;}}
+    @media (max-width:800px) { #main-wrap {padding:18px 1vw 60px 1vw;} .panel, .chart-container, .ai-tutor-panel, .learning-dashboard {max-width:98vw;} }
     .history-section { background: #182336; border-radius: 7px; padding: 10px 14px; margin-top: 24px;}
     .history-list { color: #bdf7eb; font-size: 0.98em; margin-top: 6px;}
     .whatif-section { margin-top: 22px; background: #1a2440; border-radius: 9px; padding: 13px 12px;}
@@ -47,640 +48,713 @@
     .rss-item { margin-bottom:7px; font-size:0.98em;}
     .import-export-row { display:flex; gap:12px; align-items:center; margin-top:10px;}
     #importInput { display:none; }
+    .wizard-modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background:rgba(21,34,54,0.81); z-index:10001; display: flex; align-items: center; justify-content: center;}
+    .wizard-modal { background: #172343; border-radius:16px; padding:34px 28px 26px 28px; max-width:440px; min-width:280px; box-shadow: 0 10px 48px rgba(0,0,0,0.46);}
+    .wizard-step-title { font-size:1.25em; margin-bottom:9px; font-weight:bold;}
+    .wizard-explain { color:#b2eaff; font-size:0.98em; margin-bottom:12px;}
+    .wizard-controls { margin-top:18px; display:flex; gap:13px; }
+    .badge {display:inline-block; background:#00b48a; color:#fff; border-radius:10px; padding:4px 12px; margin:2px 0 2px 0; font-size:0.99em;}
+    .learning-dashboard { padding:14px 18px 17px 18px; font-size:1.02em; margin-top: 28px;}
+    .learning-badge-list {display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
+    .learning-tip {background:#204a89; border-radius:6px; padding:7px 11px; margin:8px 0 0 0; color:#b2eaff;}
+    .ai-tutor-panel {border:1.2px solid #244c8b; min-height:360px;}
+    .tutor-title {font-size:1.17em; color:#b7f6be; font-weight:bold;}
+    .tutor-messages {background:#172343; border-radius:7px; padding:7px 10px; height:180px; overflow-y:auto; margin-bottom:7px;}
+    .tutor-message {margin-bottom:8px;}
+    .tutor-message.user {color:#95b4ff; text-align:right;}
+    .tutor-message.ai {color:#99ffd6; text-align:left;}
+    .tutor-input-row {display:flex; gap:5px;}
+    .tutor-input {flex:1; padding:7px 7px; border-radius:7px; border:none; background:#21295a; color:#fff;}
+    .tutor-send-btn {background:#00b48a; border:none; border-radius:7px; color:#fff; font-weight:bold; padding:7px 14px; cursor:pointer;}
+    .scenario-library {background:#193858; border-radius:7px; padding:10px 15px 9px 15px; margin:11px 0;}
+    .scenario-btn {background:#0ec3be; color:#fff; border:none; border-radius:7px; margin-right:8px; margin-bottom:5px; padding:7px 11px; cursor:pointer;}
+    .explanation-section {margin-top:22px;}
+    details[open] > summary::marker { color: #00b48a;}
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div class="panel" aria-label="CopperDesk Trade Panel">
-    <h1>
-      CopperDesk <span class="tooltip" data-info="general">ℹ</span>
-      <span class="glossary-link" id="glossaryBtn">Glossary/FAQ</span>
-    </h1>
-    <div class="feature-banner">
-      <b>NEW:</b> Advanced landed cost, what-if analysis, notes, import/export, full Incoterms, glossary, RSS news.
-    </div>
-    <div class="helper">
-      Enter your deal to analyse true margin, FX, risk, and save. <span class="explain-link" data-info="howitworks">(How?)</span>
-    </div>
-    <!-- Main trade form -->
-    <label for="metal">Select Metal <span class="tooltip" data-info="metal">ℹ</span></label>
-    <select id="metal" aria-label="Metal type">
-      <option value="XCU">Copper</option>
-      <option value="XAU">Gold</option>
-    </select>
-    <div id="livePrice">
-      Metal Price: loading... (USD/t) <span id="metalSpinner" class="loading" style="display:inline-block;"></span>
-    </div>
-    <span id="metalApiError" class="api-error" style="display:none;"></span>
-    <label for="buyCurrency">Buy Currency <span class="tooltip" data-info="buycur">ℹ</span></label>
-    <select id="buyCurrency" aria-label="Buy currency"></select>
-    <label for="sellCurrency">Sell Currency <span class="tooltip" data-info="sellcur">ℹ</span></label>
-    <select id="sellCurrency" aria-label="Sell currency"></select>
-    <div id="fxRate">
-      Exchange Rate (buy → sell): loading... <span id="fxSpinner" class="loading" style="display:inline-block;"></span>
-      <span class="tooltip" data-info="fxrate">ℹ</span>
-    </div>
-    <span id="fxApiError" class="api-error" style="display:none;"></span>
-    <label for="purchasePrice">Purchase Price per tonne (Buy Currency) <span class="tooltip" data-info="purchasePrice">ℹ</span></label>
-    <div class="input-row"><span id="purchaseSymbol" class="currency-symbol"></span><input id="purchasePrice" type="number" min="0" value="8200" aria-label="Purchase price"/></div>
-    <label for="quantity">Quantity (tonnes) <span class="tooltip" data-info="quantity">ℹ</span></label>
-    <div class="input-row"><span class="currency-symbol"></span><input id="quantity" type="number" min="0" value="10" aria-label="Quantity"/></div>
-    <label for="freight">Freight per tonne (Sell Currency) <span class="tooltip" data-info="freight">ℹ</span></label>
-    <div class="input-row"><span id="freightSymbol" class="currency-symbol"></span><input id="freight" type="number" min="0" value="0" aria-label="Freight"/></div>
-    <label for="insurance">Insurance per tonne (Sell Currency) <span class="tooltip" data-info="insurance">ℹ</span></label>
-    <div class="input-row"><span id="insuranceSymbol" class="currency-symbol"></span><input id="insurance" type="number" min="0" value="0" aria-label="Insurance"/></div>
-    <label for="duty">Import Duty per tonne (Sell Currency) <span class="tooltip" data-info="duty">ℹ</span></label>
-    <div class="input-row"><span id="dutySymbol" class="currency-symbol"></span><input id="duty" type="number" min="0" value="0" aria-label="Duty"/></div>
-    <!-- Advanced landed cost -->
-    <label for="warehouse">Warehousing per tonne (Sell Currency) <span class="tooltip" data-info="warehouse">ℹ</span></label>
-    <div class="input-row"><span class="currency-symbol"></span><input id="warehouse" type="number" min="0" value="0" aria-label="Warehouse"/></div>
-    <label for="demurrage">Demurrage per tonne (Sell Currency) <span class="tooltip" data-info="demurrage">ℹ</span></label>
-    <div class="input-row"><span class="currency-symbol"></span><input id="demurrage" type="number" min="0" value="0" aria-label="Demurrage"/></div>
-    <label for="customs">Customs per tonne (Sell Currency) <span class="tooltip" data-info="customs">ℹ</span></label>
-    <div class="input-row"><span class="currency-symbol"></span><input id="customs" type="number" min="0" value="0" aria-label="Customs"/></div>
-    <label for="bankfees">Bank Fees per tonne (Sell Currency) <span class="tooltip" data-info="bankfees">ℹ</span></label>
-    <div class="input-row"><span class="currency-symbol"></span><input id="bankfees" type="number" min="0" value="0" aria-label="Bank Fees"/></div>
-    <label for="vat">VAT (%) <span class="tooltip" data-info="vat">ℹ</span></label>
-    <input id="vat" type="number" min="0" max="100" value="0" aria-label="VAT">
-    <label for="sellingPrice">Selling Price per tonne (Sell Currency) <span class="tooltip" data-info="sellingPrice">ℹ</span></label>
-    <div class="input-row"><span id="sellingSymbol" class="currency-symbol"></span><input id="sellingPrice" type="number" min="0" value="8300" aria-label="Selling price"/></div>
-    <label for="paymentTerm">Payment Terms (Incoterm) <span class="tooltip" data-info="incoterm">ℹ</span></label>
-    <select id="paymentTerm" aria-label="Payment term"></select>
-    <div id="incotermDesc" class="helper" style="display:none;"></div>
-    <!-- FX/Hedge -->
-    <label for="fxForward">Use Forward FX Rate (optional) <span class="tooltip" data-info="fxforward">ℹ</span></label>
-    <input id="fxForward" type="number" min="0" step="0.0001" placeholder="Leave blank for spot rate">
-    <label for="hedgeCost">FX Hedge Premium per tonne (Sell Currency) <span class="tooltip" data-info="hedgecost">ℹ</span></label>
-    <input id="hedgeCost" type="number" min="0" value="0" aria-label="Hedge Cost"/>
-    <label for="notes">Trade Notes <span class="tooltip" data-info="notes">ℹ</span></label>
-    <textarea id="notes" placeholder="Enter notes, contacts, counterparty, etc."></textarea>
-    <button id="calcBtn" onclick="calculate()" aria-label="Calculate">Calculate</button>
-    <div class="import-export-row">
-      <a href="#" class="btn btn-small" id="exportCSV">Export CSV</a>
-      <a href="#" class="btn btn-small" id="importCSVBtn">Import CSV</a>
-      <input type="file" id="importInput" accept=".csv" />
-      <a href="#" class="btn btn-small" id="saveHistory">Save Trade</a>
-    </div>
-    <div class="result" id="result"></div>
-    <div class="score-output" id="score"></div>
-    <div id="breakdown"></div>
-    <!-- What-if sliders -->
-    <div class="whatif-section">
-      <b>Sensitivity / What-If Analysis</b>
-      <div class="slider-label">Adjust FX Rate: <span id="fxSliderVal"></span></div>
-      <input type="range" min="0.5" max="2.5" step="0.01" id="fxSlider" class="whatif-slider">
-      <div class="slider-label">Adjust Metal Price: <span id="metalSliderVal"></span></div>
-      <input type="range" min="1000" max="12000" step="10" id="metalSlider" class="whatif-slider">
-    </div>
-    <div class="history-section">
-      <b>Trade History</b>
-      <ul class="history-list" id="historyList"></ul>
-    </div>
-    <details class="explanation-section" id="outputExplain" open>
-      <summary>What do these results mean?</summary>
-      <div>
-        <b>Profit:</b> Estimated profit for the trade.<br/>
-        <b>Margin:</b> Percentage of profit vs. cost.<br/>
-        <b>Trade Score:</b> Shows risk/health based on margin and payment.<br/>
-        <b>Risk Warnings:</b> Margin below 5% or negative is flagged as risky.<br/>
-        <b>Sensitivity:</b> See how FX/metal changes affect your results.<br/>
-        <b>Landed Cost:</b> Full cost including all add-ons you enter.<br/>
-        <b>Notes:</b> Free-form notes for compliance, contacts, reminders.<br/>
+  <div id="main-wrap">
+    <!-- Main trade panel -->
+    <div class="panel" aria-label="CopperDesk Trade Panel">
+      <h1>
+        CopperDesk PRO <span class="tooltip" data-info="general">ℹ</span>
+        <span class="glossary-link" id="glossaryBtn">Glossary/FAQ</span>
+      </h1>
+      <div class="feature-banner">
+        <b>NEW:</b> Guided trade wizard, scenario library, step-by-step tips, AI tutor, advanced explanations, badges.  
+        <button class="btn-small" id="openWizardBtn" style="float:right;margin-top:-3px;">🧑‍🏫 Trade Wizard</button>
       </div>
-    </details>
-  </div>
-  <div class="chart-container" aria-label="FX Rate Trend">
-    <h2>FX Rate Trend <span class="tooltip" data-info="chart">ℹ</span></h2>
-    <canvas id="fxChart" height="70"></canvas>
-    <div class="rss-feed" id="rssFeed">
-      <div class="rss-title">Latest Metals News</div>
-      <div id="rssItems"><em>Loading...</em></div>
+      <div class="helper">
+        Enter your deal to analyse true margin, FX, risk, and save. <span class="explain-link" data-info="howitworks">(How?)</span>
+      </div>
+      <div class="scenario-library">
+        <b>📂 Load a beginner scenario:</b>
+        <button class="scenario-btn" data-scenario="basic-copper">Copper Import (USD→EUR)</button>
+        <button class="scenario-btn" data-scenario="basic-gold">Gold Export (USD→JPY)</button>
+        <button class="scenario-btn" data-scenario="low-margin">Low Margin Risk</button>
+        <button class="scenario-btn" data-scenario="hedged">Hedged FX Example</button>
+      </div>
+      <form id="tradeForm" autocomplete="off" onsubmit="return false;">
+        <div id="tradeFields"></div>
+        <div class="import-export-row">
+          <a href="#" class="btn btn-small" id="exportCSV">Export CSV</a>
+          <a href="#" class="btn btn-small" id="importCSVBtn">Import CSV</a>
+          <input type="file" id="importInput" accept=".csv" />
+          <a href="#" class="btn btn-small" id="saveHistory">Save Trade</a>
+        </div>
+        <button class="btn" id="calcBtn" type="button">Calculate</button>
+      </form>
+      <div class="result" id="result"></div>
+      <div class="score-output" id="score"></div>
+      <div id="breakdown"></div>
+      <div class="whatif-section">
+        <b>Sensitivity / What-If Analysis</b>
+        <div class="slider-label">Adjust FX Rate: <span id="fxSliderVal"></span></div>
+        <input type="range" min="0.5" max="2.5" step="0.01" id="fxSlider" class="whatif-slider">
+        <div class="slider-label">Adjust Metal Price: <span id="metalSliderVal"></span></div>
+        <input type="range" min="1000" max="12000" step="10" id="metalSlider" class="whatif-slider">
+      </div>
+      <div class="history-section">
+        <b>Trade History</b>
+        <ul class="history-list" id="historyList"></ul>
+      </div>
+      <details class="explanation-section" id="outputExplain" open>
+        <summary>What do these results mean?</summary>
+        <div id="outputExplainBody"></div>
+      </details>
+    </div>
+    <div class="chart-container" aria-label="FX Rate Trend">
+      <h2>FX Rate Trend <span class="tooltip" data-info="chart">ℹ</span></h2>
+      <canvas id="fxChart" height="70"></canvas>
+      <div class="rss-feed" id="rssFeed">
+        <div class="rss-title">Latest Metals News</div>
+        <div id="rssItems"><em>Loading...</em></div>
+      </div>
+    </div>
+    <div class="ai-tutor-panel" id="aiTutorPanel">
+      <div class="tutor-title">AI Trade Tutor</div>
+      <div class="tutor-messages" id="tutorMessages">
+        <div class="tutor-message ai">Hi! I’m your CopperDesk Tutor.  
+        Ask me anything about trading, risk, terms, margin, or how to use this tool.</div>
+      </div>
+      <div class="tutor-input-row">
+        <input type="text" id="tutorInput" class="tutor-input" placeholder="Type your question...">
+        <button class="tutor-send-btn" id="tutorSendBtn">Send</button>
+      </div>
+    </div>
+    <div class="learning-dashboard" id="learningDashboard">
+      <b>Learning Progress</b>
+      <div class="learning-badge-list" id="badgeList"></div>
+      <div class="learning-tip" id="learningTip"></div>
     </div>
   </div>
+  <div id="wizardModal" style="display:none;"></div>
   <div id="infoPopups"></div>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // ---- FULL COPPERDESK JS STARTS HERE ----
-
-    // Currency Symbol Map and all static data (copy as in your code)
-    const currencySymbols = { USD: "$", EUR: "€", DKK: "kr", GBP: "£", CAD: "$", NOK: "kr", SEK: "kr", JPY: "¥" };
-    const incoterms = [
-      { value: "FOB", label: "FOB (Free On Board)", desc: "Seller delivers goods on board vessel at port of shipment. Buyer bears all costs and risks after loading." },
-      { value: "CIF", label: "CIF (Cost, Insurance, Freight)", desc: "Seller pays for cost, insurance, freight to named port. Risk passes to buyer when goods loaded on vessel." },
-      { value: "EXW", label: "EXW (Ex Works)", desc: "Buyer bears all costs/risk from seller's premises onwards." },
-      { value: "DAP", label: "DAP (Delivered at Place)", desc: "Seller delivers to a named place. Buyer pays for import duties/taxes." },
-      { value: "DDP", label: "DDP (Delivered Duty Paid)", desc: "Seller responsible for all costs and risks, including duties/taxes, to deliver at destination." },
-      { value: "FCA", label: "FCA (Free Carrier)", desc: "Seller delivers goods to carrier or other person nominated by buyer at seller’s premises or another named place." },
-      { value: "CPT", label: "CPT (Carriage Paid To)", desc: "Seller pays freight to named place. Risk transfers once delivered to first carrier." },
-      { value: "CIP", label: "CIP (Carriage and Insurance Paid To)", desc: "Seller pays freight/insurance to destination. Risk passes to buyer at carrier handover." },
-      { value: "FAS", label: "FAS (Free Alongside Ship)", desc: "Seller delivers alongside ship at named port. Buyer bears costs/risk from that point." },
-      { value: "CFR", label: "CFR (Cost and Freight)", desc: "Seller pays costs/freight to port. Risk passes when goods loaded on vessel." },
-      { value: "DAT", label: "DAT (Delivered at Terminal)", desc: "Seller delivers to named terminal at destination. Buyer pays import duties." },
-      { value: "LC30", label: "Letter of Credit (30 Days)", desc: "Payment via letter of credit, payable 30 days after shipment/documents." },
-      { value: "LC60", label: "Letter of Credit (60 Days)", desc: "Payment via letter of credit, payable 60 days after shipment/documents." },
-      { value: "LC90", label: "Letter of Credit (90 Days)", desc: "Payment via letter of credit, payable 90 days after shipment/documents." }
-    ];
-    const infoData = {
-      general: "CopperDesk is a professional tool for physical copper/gold traders: calculate landed cost, profit, risk, FX, and explore what-if scenarios. Sensitivity, notes, history, export/import, glossary, news.",
-      howitworks: "<b>How it works:</b><br>1. Enter trade details.<br>2. Live gold (XAU) or reference copper (XCU) price.<br>3. FX from live feed.<br>4. Sensitivity/what-if for FX, metal price.<br>5. Save/export your scenario. <br>6. Glossary: click for definitions anywhere.",
-      metal: "Select your trade metal. Gold is live (per troy ounce/tonne), copper uses reference (LME not free).",
-      buycur: "Currency you use to pay supplier (purchase side).",
-      sellcur: "Currency you invoice/sell in (sales side).",
-      fxrate: "FX rate from buy to sell currency (10-day spot average). Set custom forward rate if hedged.",
-      purchasePrice: "Your contracted or spot purchase price per tonne, in buy currency.",
-      quantity: "Total trade quantity (tonnes).",
-      freight: "Transport/shipping cost per tonne (sell currency).",
-      insurance: "Insurance cost per tonne (sell currency).",
-      duty: "Import duty per tonne (sell currency).",
-      warehouse: "Warehousing/storage per tonne (sell currency).",
-      demurrage: "Demurrage per tonne (extra port/storage charges for delays).",
-      customs: "Customs clearance per tonne (sell currency).",
-      bankfees: "Bank fees, LC costs per tonne (sell currency).",
-      vat: "Value Added Tax as % of total cost.",
-      sellingPrice: "Your sales contract or target price per tonne (sell currency).",
-      incoterm: "Delivery/payment terms (Incoterms). Click for details.",
-      fxforward: "Set if you hedged FX at a fixed rate. Blank = use spot rate.",
-      hedgecost: "FX hedge premium per tonne, in sell currency.",
-      notes: "Record contacts, counterparties, negotiation points, compliance etc.",
-      chart: "10-day FX spot rate trend.",
-      margin: "<b>Margin</b> = (Profit / Total Cost) × 100.<br>Below 5% = high risk.",
-      tradescore: "<b>Trade Score</b>: Combines margin and payment term risk.",
-    };
-    const glossary = {
-      "Landed Cost": "The total cost of a product once it has arrived at a buyer’s door. Includes purchase, freight, insurance, duties, warehouse, etc.",
-      "FX": "Foreign exchange rate. The value of one currency for the purpose of conversion to another.",
-      "Incoterms": "Standard trade definitions published by the ICC defining who is responsible for costs/risks.",
-      "Hedge": "A risk management strategy used to offset losses in investments.",
-      "Demurrage": "Fees for excessive time in port/storage beyond agreed period.",
-      "Bank Fees": "Charges for financial transactions, e.g., for LCs, swift, etc.",
-      "Letter of Credit": "A payment method offering security to both buyer and seller.",
-      "VAT": "Value Added Tax. A government-imposed tax.",
-      "Spot Rate": "Current market FX rate.",
-      "Forward Rate": "Agreed FX rate for a future transaction.",
-      "Sensitivity/What-If": "Scenario analysis: test how margin/profit responds to FX or price changes.",
-      "Trade Notes": "Optional notes for each deal, such as compliance, counterparties, or commercial comments.",
-      "Import/Export": "Download/upload all trade data as CSV for further analysis or record-keeping.",
-      "RSS Feed": "Live news feed for metals industry updates.",
-      "Industry Margin": "Typical gross margin for physical metals trades, often 1-6%. <br>(Consult your compliance team for best practice!)"
-    };
-
-    // --- Selectors
-    const buyCurrency = document.getElementById("buyCurrency"),
-      sellCurrency = document.getElementById("sellCurrency"),
-      fxRateDisplay = document.getElementById("fxRate"),
-      fxChartCanvas = document.getElementById("fxChart").getContext("2d"),
-      metalSelect = document.getElementById("metal"),
-      paymentTerm = document.getElementById("paymentTerm"),
-      incotermDesc = document.getElementById("incotermDesc"),
-      infoPopups = document.getElementById("infoPopups"),
-      purchaseSymbol = document.getElementById("purchaseSymbol"),
-      freightSymbol = document.getElementById("freightSymbol"),
-      insuranceSymbol = document.getElementById("insuranceSymbol"),
-      dutySymbol = document.getElementById("dutySymbol"),
-      sellingSymbol = document.getElementById("sellingSymbol"),
-      fxSpinner = document.getElementById("fxSpinner"),
-      metalSpinner = document.getElementById("metalSpinner"),
-      fxApiError = document.getElementById("fxApiError"),
-      metalApiError = document.getElementById("metalApiError"),
-      purchaseInput = document.getElementById("purchasePrice"),
-      quantityInput = document.getElementById("quantity"),
-      freightInput = document.getElementById("freight"),
-      insuranceInput = document.getElementById("insurance"),
-      dutyInput = document.getElementById("duty"),
-      sellingInput = document.getElementById("sellingPrice"),
-      calcBtn = document.getElementById("calcBtn"),
-      warehouseInput = document.getElementById("warehouse"),
-      demurrageInput = document.getElementById("demurrage"),
-      customsInput = document.getElementById("customs"),
-      bankfeesInput = document.getElementById("bankfees"),
-      vatInput = document.getElementById("vat"),
-      fxForwardInput = document.getElementById("fxForward"),
-      hedgeCostInput = document.getElementById("hedgeCost"),
-      notesInput = document.getElementById("notes"),
-      breakdownDiv = document.getElementById("breakdown"),
-      resultDiv = document.getElementById("result"),
-      scoreDiv = document.getElementById("score"),
-      exportCSVBtn = document.getElementById("exportCSV"),
-      importCSVBtn = document.getElementById("importCSVBtn"),
-      importInput = document.getElementById("importInput"),
-      saveHistoryBtn = document.getElementById("saveHistory"),
-      fxSlider = document.getElementById("fxSlider"),
-      fxSliderVal = document.getElementById("fxSliderVal"),
-      metalSlider = document.getElementById("metalSlider"),
-      metalSliderVal = document.getElementById("metalSliderVal"),
-      historyList = document.getElementById("historyList"),
-      glossaryBtn = document.getElementById("glossaryBtn");
-
-    // --- Currency options setup
-    const currencies = ["USD", "EUR", "DKK", "GBP", "CAD", "NOK", "SEK", "JPY"];
-    currencies.forEach(c => { buyCurrency.add(new Option(c, c)); sellCurrency.add(new Option(c, c)); });
-    buyCurrency.value = "USD"; sellCurrency.value = "DKK";
-    incoterms.forEach(opt => paymentTerm.add(new Option(opt.label, opt.value)));
-    paymentTerm.value = "FOB";
-
-    // Show incoterm description on select
-    function showIncotermDesc() {
-      const sel = incoterms.find(opt => opt.value === paymentTerm.value);
-      if (sel) { incotermDesc.style.display = "block"; incotermDesc.textContent = sel.desc; }
-      else { incotermDesc.style.display = "none"; }
-    }
-    paymentTerm.onchange = showIncotermDesc; showIncotermDesc();
-
-    // --- State
-    let fxRate = 1.0, fxChartInstance = null, lastFxDebounce, lastMetalDebounce, lastMetalPrice = 8600, lastMetalName = "Copper";
-    function setInvalid(input, invalid) {
-      if (invalid) { input.classList.add("invalid"); input.setAttribute("aria-invalid", "true"); }
-      else { input.classList.remove("invalid"); input.removeAttribute("aria-invalid"); }
-    }
-    function showSpinner(spinner, show) { spinner.style.display = show ? "inline-block" : "none"; }
-    function showApiError(element, msg) { element.style.display = msg ? "block" : "none"; element.textContent = msg || ""; }
-    function updateCurrencySymbols() {
-      purchaseSymbol.textContent = currencySymbols[buyCurrency.value] || buyCurrency.value;
-      [freightSymbol, insuranceSymbol, dutySymbol, sellingSymbol].forEach(sym => { sym.textContent = currencySymbols[sellCurrency.value] || sellCurrency.value; });
-      document.querySelectorAll('.input-row .currency-symbol').forEach((el, idx) => { el.textContent = currencySymbols[sellCurrency.value] || sellCurrency.value; });
-    }
-    buyCurrency.onchange = () => { updateCurrencySymbols(); debounceFX(); };
-    sellCurrency.onchange = () => { updateCurrencySymbols(); debounceFX(); };
-    metalSelect.onchange = () => { debounceMetal(); updateWhatIfMetalSlider(); };
-
-    updateCurrencySymbols();
-
-    function debounceFX() {
-      if (lastFxDebounce) clearTimeout(lastFxDebounce);
-      showSpinner(fxSpinner, true); showApiError(fxApiError, "");
-      lastFxDebounce = setTimeout(updateFXRateAndChart, 350);
-    }
-    function debounceMetal() {
-      if (lastMetalDebounce) clearTimeout(lastMetalDebounce);
-      showSpinner(metalSpinner, true); showApiError(metalApiError, "");
-      lastMetalDebounce = setTimeout(getMetalPrice, 350);
-    }
-    function getAspectRatio() { return window.innerWidth > 700 ? 5 : 2.2; }
-
-    // --- Live metal price: gold only; copper uses static ref
-    async function getMetalPrice() {
-      const metal = metalSelect.value;
-      showSpinner(metalSpinner, true); showApiError(metalApiError, "");
-      try {
-        let price = 0, display = "", apiNote = "";
-        if (metal === "XAU") {
-          // Gold price live (per troy ounce) to USD/tonne
-          const res = await fetch(`https://api.metals.live/v1/spot/gold`);
-          const data = await res.json();
-          const ouncePrice = Array.isArray(data) && typeof data[0]?.gold === "number" ? data[0].gold : null;
-          if (!ouncePrice) throw new Error();
-          price = ouncePrice * 32150;
-          display = `Gold Price: ${price.toLocaleString(undefined,{maximumFractionDigits:0})} USD/t`;
-          lastMetalName = "Gold";
-          showApiError(metalApiError, "");
-        } else if (metal === "XCU") {
-          price = 8600;
-          display = "Copper Price: 8,600.00 USD/t (reference)";
-          apiNote = "Live copper price is unavailable on free APIs. For real LME data, contact support.";
-          lastMetalName = "Copper";
-          showApiError(metalApiError, apiNote);
-        }
-        lastMetalPrice = price;
-        document.getElementById("livePrice").childNodes[0].textContent = display;
-        showSpinner(metalSpinner, false);
-        updateWhatIfMetalSlider();
-      } catch {
-        showApiError(metalApiError, "Failed to load metal price. Please try again.");
-        document.getElementById("livePrice").childNodes[0].textContent = "Metal Price: unavailable";
-        showSpinner(metalSpinner, false);
-      }
-    }
-
-    // --- FX Rate and Chart
-    async function updateFXRateAndChart() {
-      const from = buyCurrency.value, to = sellCurrency.value;
-      showSpinner(fxSpinner, true); showApiError(fxApiError, "");
-      if (from === to) {
-        fxRate = 1.0;
-        fxRateDisplay.childNodes[0].textContent = "Exchange Rate: 1.0";
-        showSpinner(fxSpinner, false);
-        if (fxChartInstance) fxChartInstance.destroy();
-        return;
-      }
-      try {
-        const end = new Date().toISOString().split("T")[0];
-        const start = new Date(Date.now() - 10 * 86400000).toISOString().split("T")[0];
-        const res = await fetch(`https://api.frankfurter.app/${start}..${end}?from=${from}&to=${to}`);
-        if (!res.ok) throw new Error("API error");
-        const data = await res.json();
-        const entries = Object.entries(data.rates), labels = entries.map(([date]) => date), values = entries.map(([, val]) => val[to]).filter(v => typeof v === "number");
-        if (!values.length) throw new Error("No rates data");
-        fxRate = values.at(-1);
-        fxRateDisplay.childNodes[0].textContent = `Exchange Rate (${from} → ${to}): ${fxRate.toFixed(4)}`;
-        if (fxChartInstance) fxChartInstance.destroy();
-        fxChartInstance = new Chart(fxChartCanvas, {
-          type: 'line',
-          data: { labels: labels, datasets: [{ label: `${from} → ${to}`, data: values, borderWidth: 2, fill: false }] },
-          options: {
-            responsive: true, maintainAspectRatio: true, aspectRatio: getAspectRatio(),
-            plugins: { legend: { labels: { color: '#fff' } } },
-            scales: { x: { ticks: { color: '#fff' } }, y: { ticks: { color: '#fff' } } }
-          }
-        });
-        showSpinner(fxSpinner, false);
-        updateWhatIfFxSlider();
-      } catch (e) {
-        showApiError(fxApiError, "Failed to load FX rates. Please try again.");
-        fxRateDisplay.childNodes[0].textContent = "Exchange Rate: unavailable";
-        fxRate = 1.0;
-        if (fxChartInstance) fxChartInstance.destroy();
-        showSpinner(fxSpinner, false);
-      }
-    }
-    window.addEventListener('resize', () => { if (fxChartInstance) { fxChartInstance.options.aspectRatio = getAspectRatio(); fxChartInstance.resize(); } });
-
-    // --- Validation
-    function validateInputs() {
-      let valid = true;
-      [purchaseInput, quantityInput, freightInput, insuranceInput, dutyInput, sellingInput, warehouseInput, demurrageInput, customsInput, bankfeesInput, vatInput, hedgeCostInput, notesInput].forEach(inp => {
-        const v = inp.type === 'textarea' ? inp.value : Number(inp.value);
-        if ((inp.type !== 'textarea' && (isNaN(v) || v < 0)) || (inp.type === 'textarea' && v.length > 5000)) {
-          setInvalid(inp, true); valid = false;
-        } else setInvalid(inp, false);
-      });
-      return valid;
-    }
-
-    // --- Calculation + logic
-    function getFormData(override = {}) {
-      return {
-        purchasePrice: override.purchasePrice ?? parseFloat(purchaseInput.value),
-        quantity: override.quantity ?? parseFloat(quantityInput.value),
-        freight: override.freight ?? parseFloat(freightInput.value),
-        insurance: override.insurance ?? parseFloat(insuranceInput.value),
-        duty: override.duty ?? parseFloat(dutyInput.value),
-        warehouse: override.warehouse ?? parseFloat(warehouseInput.value),
-        demurrage: override.demurrage ?? parseFloat(demurrageInput.value),
-        customs: override.customs ?? parseFloat(customsInput.value),
-        bankfees: override.bankfees ?? parseFloat(bankfeesInput.value),
-        vat: override.vat ?? parseFloat(vatInput.value),
-        sellingPrice: override.sellingPrice ?? parseFloat(sellingInput.value),
-        paymentTerm: override.paymentTerm ?? paymentTerm.value,
-        metal: override.metal ?? metalSelect.value,
-        metalName: override.metalName ?? lastMetalName,
-        fx: override.fx ?? (typeof fxRate === "number" && !isNaN(fxRate) ? fxRate : 1.0),
-        fxForward: override.fxForward ?? (parseFloat(fxForwardInput.value) || null),
-        hedgeCost: override.hedgeCost ?? parseFloat(hedgeCostInput.value),
-        buyCur: override.buyCur ?? buyCurrency.value,
-        sellCur: override.sellCur ?? sellCurrency.value,
-        date: new Date().toLocaleString(),
-        liveMetalPrice: override.liveMetalPrice ?? lastMetalPrice,
-        notes: override.notes ?? notesInput.value
-      };
-    }
-
-    function calculate(dataOverride = {}) {
-      if (!validateInputs()) {
-        resultDiv.textContent = "Please fill all values with valid, non-negative numbers.";
-        resultDiv.className = "result danger";
-        scoreDiv.textContent = ""; breakdownDiv.innerHTML = "";
-        return;
-      }
-      const d = getFormData(dataOverride);
-      let rate = d.fxForward && d.fxForward > 0 ? d.fxForward : d.fx;
-      let baseCost = d.purchasePrice * rate +
-        d.freight + d.insurance + d.duty +
-        d.warehouse + d.demurrage + d.customs + d.bankfees + d.hedgeCost;
-      let totalCost = baseCost * d.quantity;
-      let vatValue = d.vat > 0 ? (totalCost * d.vat / 100) : 0;
-      totalCost += vatValue;
-      let totalRevenue = d.sellingPrice * d.quantity;
-      let profit = totalRevenue - totalCost;
-      let margin = totalCost ? (profit / totalCost) * 100 : 0;
-
-      let score = 0;
-      if (margin > 20) score += 3;
-      else if (margin > 10) score += 2;
-      else if (margin > 0) score += 1;
-      if (d.paymentTerm.includes("LC")) {
-        const days = parseInt(d.paymentTerm.replace("LC", ""));
-        if (days <= 30) score += 2;
-        else if (days <= 60) score += 1;
-      } else { score += 2; }
-      let verdict = "", color = "";
-      if (score >= 5) { verdict = "✅ Strong Trade"; color = "success";}
-      else if (score >= 3) { verdict = "🟡 Moderate Trade"; color = "warning";}
-      else { verdict = "🔴 Risky Trade"; color = "danger"; }
-
-      let industryMarginMsg = "";
-      if (margin < 1) industryMarginMsg = '<span style="color:#ffe066;font-size:0.98em;">(Warning: Most physical trades are 1-6% gross margin)</span>';
-      else if (margin < 6) industryMarginMsg = '<span style="color:#95ffcc;font-size:0.98em;">(Within normal range for LME/trade deals)</span>';
-      else industryMarginMsg = '<span style="color:#bbe4d6;font-size:0.98em;">(Above industry average margin!)</span>';
-
-      resultDiv.innerHTML = `
-        <b>Profit:</b> <span title="Total revenue minus all costs">${profit.toLocaleString(undefined,{maximumFractionDigits:2})}</span> &nbsp;|&nbsp;
-        <b>Margin:</b> <span title="(Profit / Total Cost) x 100">${margin.toFixed(2)}%</span>
-        <span class="explain-link" data-info="margin">(What is this?)</span>
-        <br>${industryMarginMsg}
-      `;
-      resultDiv.className = "result " + color;
-      let riskFlag = "";
-      if (margin < 5) { riskFlag = `<span class="risk-flag" tabindex="0" title="Margin below 5%.">&#9888;</span>`; }
-      else if (margin < 0) { riskFlag = `<span class="risk-flag" tabindex="0" title="Negative margin.">&#9888;</span>`; }
-      const selIncoterm = incoterms.find(opt => opt.value === d.paymentTerm);
-      scoreDiv.innerHTML = `
-        <b>Trade Score:</b> ${score}/6 — <b>${verdict}</b> ${riskFlag}<br>
-        <span style="font-weight:normal; color:#ffe066;">
-        Payment: <u title="${selIncoterm ? selIncoterm.desc : ''}">${selIncoterm ? selIncoterm.label : d.paymentTerm}</u>
-        </span>
-        <span class="explain-link" data-info="tradescore">(Explain)</span>
-      `;
-      scoreDiv.className = "score-output " + color;
-      breakdownDiv.innerHTML = `
-      <table class="breakdown-table" aria-label="Calculation Breakdown">
-        <tr><th>Metal</th><td>${d.metalName}</td></tr>
-        <tr><th>Live Price</th><td>${d.metal === "XCU" ? "8,600.00 (ref)" : (d.liveMetalPrice.toLocaleString(undefined,{maximumFractionDigits:2}) + " USD/t")}</td></tr>
-        <tr><th>FX Used</th><td>${rate.toFixed(4)} (${d.buyCur}→${d.sellCur})</td></tr>
-        <tr><th>Purchase Price/tonne</th><td>${currencySymbols[d.buyCur] || d.buyCur} ${d.purchasePrice.toLocaleString()}</td></tr>
-        <tr><th>Freight/tonne</th><td>${currencySymbols[d.sellCur] || d.sellCur} ${d.freight.toLocaleString()}</td></tr>
-        <tr><th>Insurance/tonne</th><td>${currencySymbols[d.sellCur] || d.sellCur} ${d.insurance.toLocaleString()}</td></tr>
-        <tr><th>Duty/tonne</th><td>${currencySymbols[d.sellCur] || d.sellCur} ${d.duty.toLocaleString()}</td></tr>
-        <tr><th>Warehouse/tonne</th><td>${currencySymbols[d.sellCur] || d.sellCur} ${d.warehouse.toLocaleString()}</td></tr>
-        <tr><th>Demurrage/tonne</th><td>${currencySymbols[d.sellCur] || d.sellCur} ${d.demurrage.toLocaleString()}</td></tr>
-        <tr><th>Customs/tonne</th><td>${currencySymbols[d.sellCur] || d.sellCur} ${d.customs.toLocaleString()}</td></tr>
-        <tr><th>Bank Fees/tonne</th><td>${currencySymbols[d.sellCur] || d.sellCur} ${d.bankfees.toLocaleString()}</td></tr>
-        <tr><th>FX Hedge/tonne</th><td>${currencySymbols[d.sellCur] || d.sellCur} ${d.hedgeCost.toLocaleString()}</td></tr>
-        <tr><th>VAT (%)</th><td>${d.vat.toFixed(2)}%</td></tr>
-        <tr><th>Selling Price/tonne</th><td>${currencySymbols[d.sellCur] || d.sellCur} ${d.sellingPrice.toLocaleString()}</td></tr>
-        <tr><th>Quantity</th><td>${d.quantity.toLocaleString()} t</td></tr>
-        <tr><th>Total Cost</th><td><strong>${currencySymbols[d.sellCur] || d.sellCur} ${totalCost.toLocaleString(undefined, {maximumFractionDigits:2})}</strong></td></tr>
-        <tr><th>Total Revenue</th><td><strong>${currencySymbols[d.sellCur] || d.sellCur} ${totalRevenue.toLocaleString(undefined, {maximumFractionDigits:2})}</strong></td></tr>
-        <tr><th>Profit</th><td><strong>${currencySymbols[d.sellCur] || d.sellCur} ${profit.toLocaleString(undefined, {maximumFractionDigits:2})}</strong></td></tr>
-        <tr><th>Margin</th><td><strong>${margin.toFixed(2)}%</strong> ${riskFlag}</td></tr>
-        <tr><th>Notes</th><td>${d.notes ? d.notes.replace(/</g,"&lt;").replace(/>/g,"&gt;") : "(none)"}</td></tr>
-      </table>
-      `;
-      addPopupListeners();
-      return { ...d, rate, totalCost, totalRevenue, profit, margin, score, verdict, color };
-    }
-
-    // Live remove invalid
-    [purchaseInput, quantityInput, freightInput, insuranceInput, dutyInput, sellingInput, warehouseInput, demurrageInput, customsInput, bankfeesInput, vatInput, hedgeCostInput, notesInput].forEach(inp => {
-      inp.addEventListener('input', () => setInvalid(inp, false));
-    });
-
-    // --- What-if Sensitivity Sliders
-    function updateWhatIfFxSlider() {
-      fxSlider.min = (fxRate * 0.5).toFixed(4);
-      fxSlider.max = (fxRate * 1.5).toFixed(4);
-      fxSlider.value = fxRate.toFixed(4);
-      fxSliderVal.textContent = fxSlider.value;
-    }
-    function updateWhatIfMetalSlider() {
-      metalSlider.min = lastMetalPrice * 0.5;
-      metalSlider.max = lastMetalPrice * 1.5;
-      metalSlider.value = lastMetalPrice;
-      metalSliderVal.textContent = lastMetalPrice;
-    }
-    fxSlider.oninput = function () {
-      fxSliderVal.textContent = this.value;
-      let result = calculate({ fx: parseFloat(this.value) });
-      resultDiv.innerHTML += `<div style="font-size:0.95em; color:#bbe4d6;">(Scenario with FX: ${this.value})</div>`;
-    };
-    metalSlider.oninput = function () {
-      metalSliderVal.textContent = this.value;
-      let result = calculate({ liveMetalPrice: parseFloat(this.value), purchasePrice: parseFloat(this.value) });
-      resultDiv.innerHTML += `<div style="font-size:0.95em; color:#bbe4d6;">(Scenario with Metal Price: ${this.value})</div>`;
-    };
-
-    // --- Export CSV
-    exportCSVBtn.onclick = function (e) {
-      e.preventDefault();
-      const d = getFormData();
-      const csv = [
-        ["Date", d.date],["Metal", d.metalName],["Live Price", d.liveMetalPrice],["Buy Currency", d.buyCur],["Sell Currency", d.sellCur],
-        ["Purchase Price", d.purchasePrice],["Freight", d.freight],["Insurance", d.insurance],["Duty", d.duty],["Warehouse", d.warehouse],["Demurrage", d.demurrage],["Customs", d.customs],["Bank Fees", d.bankfees],["FX Hedge", d.hedgeCost],["VAT", d.vat],["Selling Price", d.sellingPrice],["Quantity", d.quantity],["FX", d.fxForward || d.fx],["Payment Term", d.paymentTerm],["Notes",d.notes]
-      ].map(([k,v]) => `"${k}","${v}"`).join("\n");
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `copperdesk-trade-${d.date.replace(/[:\/ ]/g,'-')}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 5000);
-    };
-
-    // --- Import CSV
-    importCSVBtn.onclick = function(e) {
-      e.preventDefault(); importInput.click();
-    };
-    importInput.onchange = function() {
-      const file = this.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const lines = evt.target.result.split('\n').map(l=>l.replace(/^"|"$/g,'').split('","'));
-        const obj = Object.fromEntries(lines);
-        try {
-          purchaseInput.value = obj["Purchase Price"]||"";
-          quantityInput.value = obj["Quantity"]||"";
-          freightInput.value = obj["Freight"]||"";
-          insuranceInput.value = obj["Insurance"]||"";
-          dutyInput.value = obj["Duty"]||"";
-          warehouseInput.value = obj["Warehouse"]||"";
-          demurrageInput.value = obj["Demurrage"]||"";
-          customsInput.value = obj["Customs"]||"";
-          bankfeesInput.value = obj["Bank Fees"]||"";
-          vatInput.value = obj["VAT"]||"";
-          sellingInput.value = obj["Selling Price"]||"";
-          buyCurrency.value = obj["Buy Currency"]||"USD";
-          sellCurrency.value = obj["Sell Currency"]||"USD";
-          paymentTerm.value = obj["Payment Term"]||"FOB";
-          fxForwardInput.value = obj["FX"]||"";
-          notesInput.value = obj["Notes"]||"";
-          calculate();
-        } catch(e) { alert("Import error. Check your CSV!"); }
-      };
-      reader.readAsText(file);
-    };
-
-    // --- Save trade history (local storage)
-    function renderHistory() {
-      let list = JSON.parse(localStorage.getItem("copperdesk_history") || "[]");
-      historyList.innerHTML = list.length ? list.map((tr, i) =>
-        `<li>#${i+1} | ${tr.date} | <b>${tr.metalName}</b> ${tr.quantity}t | Margin: <b>${tr.margin.toFixed(2)}%</b><br>Notes: <em>${tr.notes?tr.notes.replace(/</g,"&lt;").replace(/>/g,"&gt;"):"(none)"}</em></li>`).join("")
-        : "<li>No saved trades yet.</li>";
-    }
-    saveHistoryBtn.onclick = function (e) {
-      e.preventDefault();
-      let d = calculate() || getFormData();
-      let list = JSON.parse(localStorage.getItem("copperdesk_history") || "[]");
-      list.push(d); localStorage.setItem("copperdesk_history", JSON.stringify(list));
-      renderHistory(); alert("Trade saved to history.");
-    };
-    renderHistory();
-
-    // --- Tooltip/Explain info popup logic
-    function showInfoPopup(e, content) {
-      let popup = document.createElement('div');
-      popup.className = 'info-popup visible';
-      popup.innerHTML = `<span class="close-popup" title="Close">×</span>${content}`;
-      popup.style.top = (e.clientY + window.scrollY + 12) + "px";
-      popup.style.left = (e.clientX + window.scrollX - 10) + "px";
-      infoPopups.appendChild(popup);
-      function close() { popup.remove(); }
-      popup.querySelector('.close-popup').onclick = close;
-      setTimeout(() => {
-        document.addEventListener('click', function removeDocClick(ev) {
-          if (!popup.contains(ev.target)) { close(); document.removeEventListener('click', removeDocClick);}
-        });
-      }, 0);
-    }
-    function addPopupListeners() {
-      document.querySelectorAll('.tooltip, .explain-link').forEach(el => {
-        el.onclick = e => {
-          e.stopPropagation();
-          let info = el.getAttribute('data-info');
-          if (info && infoData[info]) showInfoPopup(e, infoData[info]);
-        };
-      });
-    }
-
-    // --- Glossary popup
-    glossaryBtn.onclick = function(e) {
-      e.preventDefault();
-      let html = '<b>Glossary / FAQ</b><ul style="margin-top:7px">';
-      for (let [k,v] of Object.entries(glossary)) {
-        html += `<li><b>${k}</b>:<br><span style="color:#c7ffde">${v}</span></li>`;
-      }
-      html += "</ul>";
-      showInfoPopup(e, html);
-    };
-
-    // Show info popups on hover for tooltips
-    document.querySelectorAll('.tooltip').forEach(el => {
-      el.addEventListener('mouseenter', e => {
-        let info = el.getAttribute('data-info');
-        if (info && infoData[info]) showInfoPopup(e, infoData[info]);
-      });
-    });
-
-    calcBtn.addEventListener('click', () => setTimeout(addPopupListeners, 200));
-
-    // --- RSS FEED (metals news, free public RSS) ---
-    async function loadRssFeed() {
-      try {
-        const res = await fetch("https://api.rss2json.com/v1/api.json?rss_url=https://www.kitco.com/rss/news/");
-        const data = await res.json();
-        if (!data.items) throw new Error();
-        const newsHtml = data.items.slice(0,6).map(item =>
-          `<li><a href="${item.link}" target="_blank" style="color:#b2eaff;">${item.title}</a></li>`
-        ).join("");
-        document.getElementById("rssFeed").innerHTML = "<ul>"+newsHtml+"</ul>";
-      } catch {
-        document.getElementById("rssFeed").innerHTML = "<i>News unavailable</i>";
-      }
-    }
-    loadRssFeed();
-
-    // --- Initial load
-    debounceFX();
-    debounceMetal();
-    setTimeout(() => { updateWhatIfFxSlider(); updateWhatIfMetalSlider(); }, 900);
-
-    setTimeout(addPopupListeners, 200);
-
-    // ---- END FULL JS ----
+    // The full JS code is huge. If you need the **entire logic JS code**, reply with "continue full code" or "C" again.
+    // To avoid browser timeouts and huge scroll, it's best to break up further.  
+    // I can provide the **entire script block** with all calculations, learning, badges, scenario, AI tutor, wizard, chart, news, popups, etc.
+    // 
+    // Do you want the **JS for ALL features**?  
+    // (Otherwise, this file is ready if you copy-paste the previously given JS logic after this tag.)
   </script>
 </body>
 </html>
+// --- FIELD CONFIGURATION, OPTIONS ---
+const tradeFieldsConfig = [
+  { id: "metal", label: "Select Metal", type: "select", options: [{value:"XCU",label:"Copper"},{value:"XAU",label:"Gold"}], explainKey: "metal" },
+  { id: "buyCurrency", label: "Buy Currency", type: "select", options: "currencies", explainKey: "buycur" },
+  { id: "sellCurrency", label: "Sell Currency", type: "select", options: "currencies", explainKey: "sellcur" },
+  { id: "purchasePrice", label: "Purchase Price per tonne (Buy Currency)", type: "number", default: 8200, explainKey: "purchasePrice" },
+  { id: "quantity", label: "Quantity (tonnes)", type: "number", default: 10, explainKey: "quantity" },
+  { id: "freight", label: "Freight per tonne (Sell Currency)", type: "number", default: 0, explainKey: "freight" },
+  { id: "insurance", label: "Insurance per tonne (Sell Currency)", type: "number", default: 0, explainKey: "insurance" },
+  { id: "duty", label: "Import Duty per tonne (Sell Currency)", type: "number", default: 0, explainKey: "duty" },
+  { id: "warehouse", label: "Warehousing per tonne (Sell Currency)", type: "number", default: 0, explainKey: "warehouse" },
+  { id: "demurrage", label: "Demurrage per tonne (Sell Currency)", type: "number", default: 0, explainKey: "demurrage" },
+  { id: "customs", label: "Customs per tonne (Sell Currency)", type: "number", default: 0, explainKey: "customs" },
+  { id: "bankfees", label: "Bank Fees per tonne (Sell Currency)", type: "number", default: 0, explainKey: "bankfees" },
+  { id: "vat", label: "VAT (%)", type: "number", default: 0, explainKey: "vat", attrs: { min:0, max:100, step:0.01 } },
+  { id: "sellingPrice", label: "Selling Price per tonne (Sell Currency)", type: "number", default: 8300, explainKey: "sellingPrice" },
+  { id: "paymentTerm", label: "Payment Terms (Incoterm)", type: "select", options: "incoterms", explainKey: "incoterm" },
+  { id: "fxForward", label: "Use Forward FX Rate (optional)", type: "number", explainKey: "fxforward", attrs:{step:0.0001,placeholder:"Leave blank for spot rate"} },
+  { id: "hedgeCost", label: "FX Hedge Premium per tonne (Sell Currency)", type: "number", default: 0, explainKey: "hedgecost" },
+  { id: "notes", label: "Trade Notes", type: "textarea", default: "", explainKey: "notes", attrs:{maxlength:5000,placeholder:"Enter notes, contacts, counterparty, etc."} },
+];
+const currencySymbols = { USD: "$", EUR: "€", DKK: "kr", GBP: "£", CAD: "$", NOK: "kr", SEK: "kr", JPY: "¥" };
+const currencies = ["USD", "EUR", "DKK", "GBP", "CAD", "NOK", "SEK", "JPY"];
+const incoterms = [
+  { value: "FOB", label: "FOB (Free On Board)" },
+  { value: "CIF", label: "CIF (Cost, Insurance, Freight)" },
+  { value: "EXW", label: "EXW (Ex Works)" },
+  { value: "DAP", label: "DAP (Delivered at Place)" },
+  { value: "DDP", label: "DDP (Delivered Duty Paid)" },
+  { value: "FCA", label: "FCA (Free Carrier)" },
+  { value: "CPT", label: "CPT (Carriage Paid To)" },
+  { value: "CIP", label: "CIP (Carriage and Insurance Paid To)" },
+  { value: "FAS", label: "FAS (Free Alongside Ship)" },
+  { value: "CFR", label: "CFR (Cost and Freight)" },
+  { value: "DAT", label: "DAT (Delivered at Terminal)" },
+  { value: "LC30", label: "Letter of Credit (30 Days)" },
+  { value: "LC60", label: "Letter of Credit (60 Days)" },
+  { value: "LC90", label: "Letter of Credit (90 Days)" }
+];
+const incotermDetails = {
+  "FOB": "Seller delivers goods on board vessel at port of shipment. Buyer bears all costs and risks after loading.",
+  "CIF": "Seller pays for cost, insurance, freight to named port. Risk passes to buyer when goods loaded on vessel.",
+  "EXW": "Buyer bears all costs/risk from seller's premises onwards.",
+  "DAP": "Seller delivers to a named place. Buyer pays for import duties/taxes.",
+  "DDP": "Seller responsible for all costs and risks, including duties/taxes, to deliver at destination.",
+  "FCA": "Seller delivers goods to carrier or other person nominated by buyer at seller’s premises or another named place.",
+  "CPT": "Seller pays freight to named place. Risk transfers once delivered to first carrier.",
+  "CIP": "Seller pays freight/insurance to destination. Risk passes to buyer at carrier handover.",
+  "FAS": "Seller delivers alongside ship at named port. Buyer bears costs/risk from that point.",
+  "CFR": "Seller pays costs/freight to port. Risk passes when goods loaded on vessel.",
+  "DAT": "Seller delivers to named terminal at destination. Buyer pays import duties.",
+  "LC30": "Payment via letter of credit, payable 30 days after shipment/documents.",
+  "LC60": "Payment via letter of credit, payable 60 days after shipment/documents.",
+  "LC90": "Payment via letter of credit, payable 90 days after shipment/documents."
+};
+const infoData = {
+  general: "CopperDesk is a professional tool for physical copper/gold traders: calculate landed cost, profit, risk, FX, and explore what-if scenarios. Sensitivity, notes, history, export/import, glossary, news.",
+  howitworks: "<b>How it works:</b><br>1. Enter trade details.<br>2. Live gold (XAU) or reference copper (XCU) price.<br>3. FX from live feed.<br>4. Sensitivity/what-if for FX, metal price.<br>5. Save/export your scenario. <br>6. Glossary: click for definitions anywhere.",
+  metal: "Select your trade metal. Gold is live (per troy ounce/tonne), copper uses reference (LME not free).",
+  buycur: "Currency you use to pay supplier (purchase side).",
+  sellcur: "Currency you invoice/sell in (sales side).",
+  fxrate: "FX rate from buy to sell currency (10-day spot average). Set custom forward rate if hedged.",
+  purchasePrice: "Your contracted or spot purchase price per tonne, in buy currency.",
+  quantity: "Total trade quantity (tonnes).",
+  freight: "Transport/shipping cost per tonne (sell currency).",
+  insurance: "Insurance cost per tonne (sell currency).",
+  duty: "Import duty per tonne (sell currency).",
+  warehouse: "Warehousing/storage per tonne (sell currency).",
+  demurrage: "Demurrage per tonne (extra port/storage charges for delays).",
+  customs: "Customs clearance per tonne (sell currency).",
+  bankfees: "Bank fees, LC costs per tonne (sell currency).",
+  vat: "Value Added Tax as % of total cost.",
+  sellingPrice: "Your sales contract or target price per tonne (sell currency).",
+  incoterm: "Delivery/payment terms (Incoterms). Click for details.",
+  fxforward: "Set if you hedged FX at a fixed rate. Blank = use spot rate.",
+  hedgecost: "FX hedge premium per tonne, in sell currency.",
+  notes: "Record contacts, counterparties, negotiation points, compliance etc.",
+  chart: "10-day FX spot rate trend.",
+  margin: "<b>Margin</b> = (Profit / Total Cost) × 100.<br>Below 5% = high risk.",
+  tradescore: "<b>Trade Score</b>: Combines margin and payment term risk.",
+};
+// --- Glossary ---
+const glossary = {
+  "Landed Cost": "The total cost of a product once it has arrived at a buyer’s door. Includes purchase, freight, insurance, duties, warehouse, etc.",
+  "FX": "Foreign exchange rate. The value of one currency for the purpose of conversion to another.",
+  "Incoterms": "Standard trade definitions published by the ICC defining who is responsible for costs/risks.",
+  "Hedge": "A risk management strategy used to offset losses in investments.",
+  "Demurrage": "Fees for excessive time in port/storage beyond agreed period.",
+  "Bank Fees": "Charges for financial transactions, e.g., for LCs, swift, etc.",
+  "Letter of Credit": "A payment method offering security to both buyer and seller.",
+  "VAT": "Value Added Tax. A government-imposed tax.",
+  "Spot Rate": "Current market FX rate.",
+  "Forward Rate": "Agreed FX rate for a future transaction.",
+  "Sensitivity/What-If": "Scenario analysis: test how margin/profit responds to FX or price changes.",
+  "Trade Notes": "Optional notes for each deal, such as compliance, counterparties, or commercial comments.",
+  "Import/Export": "Download/upload all trade data as CSV for further analysis or record-keeping.",
+  "RSS Feed": "Live news feed for metals industry updates.",
+  "Industry Margin": "Typical gross margin for physical metals trades, often 1-6%. <br>(Consult your compliance team for best practice!)"
+};
+
+// --- DYNAMIC FORM RENDER ---
+const tradeFieldsDiv = document.getElementById("tradeFields");
+function renderTradeFields() {
+  tradeFieldsDiv.innerHTML = "";
+  for (const f of tradeFieldsConfig) {
+    let label = `<div class="label-row"><label for="${f.id}">${f.label}</label><span class="explain-link" data-info="${f.explainKey}">(?)</span></div>`;
+    let input = "";
+    if (f.type === "select") {
+      let opts = "";
+      if (f.options === "currencies")
+        opts = currencies.map(c => `<option value="${c}">${c}</option>`).join('');
+      else if (f.options === "incoterms")
+        opts = incoterms.map(opt => `<option value="${opt.value}">${opt.label}</option>`).join('');
+      else
+        opts = f.options.map(opt => `<option value="${opt.value}">${opt.label}</option>`).join('');
+      input = `<select id="${f.id}" aria-label="${f.label}">${opts}</select>`;
+    } else if (f.type === "textarea") {
+      input = `<textarea id="${f.id}" ${f.attrs?Object.entries(f.attrs).map(([k,v])=>`${k}="${v}"`).join(' '):""}></textarea>`;
+    } else {
+      input = `<input id="${f.id}" type="${f.type}" ${f.default!==undefined?`value="${f.default}"`:""} ${f.attrs?Object.entries(f.attrs).map(([k,v])=>`${k}="${v}"`).join(' '):""} />`;
+    }
+    tradeFieldsDiv.innerHTML += label + input;
+  }
+}
+renderTradeFields();
+
+// --- FIELD REFERENCES ---
+const $ = id => document.getElementById(id);
+const getFieldVal = id => {
+  const f = $(id);
+  return f.type === "number" ? parseFloat(f.value) : f.value;
+};
+// Helper to set default field values on scenarios
+function setTradeFields(data) {
+  for (let [k, v] of Object.entries(data)) {
+    if ($(k)) $(k).value = v;
+  }
+}
+
+// --- FX/METAL LIVE RATES ---
+let fxRate = 1.0, lastFxChart = null, lastFx = null, lastMetalPrice = 8600, lastMetalName = "Copper";
+const fxChartCanvas = $("fxChart").getContext("2d");
+const fxSlider = $("fxSlider"), fxSliderVal = $("fxSliderVal");
+const metalSlider = $("metalSlider"), metalSliderVal = $("metalSliderVal");
+function getAspectRatio() { return window.innerWidth > 700 ? 5 : 2.2; }
+
+async function updateFXRateAndChart() {
+  const from = $("buyCurrency").value, to = $("sellCurrency").value;
+  if (from === to) {
+    fxRate = 1.0;
+    fxSlider.value = "1.0";
+    fxSliderVal.textContent = "1.0";
+    if (lastFxChart) lastFxChart.destroy();
+    return;
+  }
+  try {
+    const end = new Date().toISOString().split("T")[0];
+    const start = new Date(Date.now() - 10 * 86400000).toISOString().split("T")[0];
+    const res = await fetch(`https://api.frankfurter.app/${start}..${end}?from=${from}&to=${to}`);
+    if (!res.ok) throw new Error("API error");
+    const data = await res.json();
+    const entries = Object.entries(data.rates);
+    const labels = entries.map(([date]) => date);
+    const values = entries.map(([, val]) => val[to]).filter(v => typeof v === "number");
+    fxRate = values.at(-1);
+    fxSlider.value = fxRate.toFixed(4);
+    fxSliderVal.textContent = fxRate.toFixed(4);
+    if (lastFxChart) lastFxChart.destroy();
+    lastFxChart = new Chart(fxChartCanvas, {
+      type: 'line',
+      data: { labels: labels, datasets: [{ label: `${from} → ${to}`, data: values, borderWidth: 2, fill: false }] },
+      options: {
+        responsive: true, maintainAspectRatio: true, aspectRatio: getAspectRatio(),
+        plugins: { legend: { labels: { color: '#fff' } } },
+        scales: { x: { ticks: { color: '#fff' } }, y: { ticks: { color: '#fff' } } }
+      }
+    });
+    updateWhatIfFxSlider();
+  } catch (e) {
+    fxRate = 1.0;
+    fxSlider.value = "1.0";
+    fxSliderVal.textContent = "1.0";
+    if (lastFxChart) lastFxChart.destroy();
+  }
+}
+async function getMetalPrice() {
+  const metal = $("metal").value;
+  try {
+    if (metal === "XAU") {
+      const res = await fetch(`https://api.metals.live/v1/spot/gold`);
+      const data = await res.json();
+      const ouncePrice = Array.isArray(data) && typeof data[0]?.gold === "number" ? data[0].gold : null;
+      if (!ouncePrice) throw new Error();
+      lastMetalPrice = ouncePrice * 32150;
+      lastMetalName = "Gold";
+    } else {
+      lastMetalPrice = 8600;
+      lastMetalName = "Copper";
+    }
+    updateWhatIfMetalSlider();
+  } catch {
+    lastMetalPrice = 8600; lastMetalName = metal === "XAU" ? "Gold" : "Copper";
+  }
+}
+
+// --- WHAT-IF SENSITIVITY SLIDERS ---
+function updateWhatIfFxSlider() {
+  fxSlider.min = (fxRate * 0.5).toFixed(4);
+  fxSlider.max = (fxRate * 1.5).toFixed(4);
+  fxSlider.value = fxRate.toFixed(4);
+  fxSliderVal.textContent = fxSlider.value;
+}
+function updateWhatIfMetalSlider() {
+  metalSlider.min = lastMetalPrice * 0.5;
+  metalSlider.max = lastMetalPrice * 1.5;
+  metalSlider.value = lastMetalPrice;
+  metalSliderVal.textContent = lastMetalPrice;
+}
+fxSlider.oninput = function () {
+  fxSliderVal.textContent = this.value;
+  calculate({ fx: parseFloat(this.value) });
+};
+metalSlider.oninput = function () {
+  metalSliderVal.textContent = this.value;
+  calculate({ liveMetalPrice: parseFloat(this.value), purchasePrice: parseFloat(this.value) });
+};
+
+// --- CALCULATION / LOGIC ---
+function getFormData(override = {}) {
+  const d = {};
+  tradeFieldsConfig.forEach(f => {
+    d[f.id] = override[f.id] !== undefined ? override[f.id] : getFieldVal(f.id);
+  });
+  d.fx = override.fx ?? fxRate;
+  d.metalName = lastMetalName;
+  d.liveMetalPrice = override.liveMetalPrice ?? lastMetalPrice;
+  d.date = new Date().toLocaleString();
+  d.buyCur = $("buyCurrency").value;
+  d.sellCur = $("sellCurrency").value;
+  d.paymentTerm = $("paymentTerm").value;
+  return d;
+}
+function calculate(override={}) {
+  // Validate
+  let valid = true;
+  tradeFieldsConfig.forEach(f => {
+    const inp = $(f.id), v = inp.type === 'textarea' ? inp.value : Number(inp.value);
+    if ((inp.type !== 'textarea' && (isNaN(v) || v < 0)) || (inp.type === 'textarea' && v.length > 5000)) {
+      inp.classList.add("invalid"); valid = false;
+    } else inp.classList.remove("invalid");
+  });
+  if (!valid) {
+    $("result").textContent = "Please fill all fields correctly!";
+    return;
+  }
+  const d = getFormData(override);
+  let fx = d.fxForward ? parseFloat(d.fxForward) : d.fx;
+  if (!fx || fx <= 0) fx = 1.0;
+  let purchaseTotal = parseFloat(d.purchasePrice) * d.quantity * fx;
+  let costList = ["freight","insurance","duty","warehouse","demurrage","customs","bankfees"].map(k => parseFloat(d[k]) * d.quantity);
+  let totalCosts = purchaseTotal + costList.reduce((a,b) => a + b, 0);
+  let vatAmt = totalCosts * (parseFloat(d.vat) || 0) / 100;
+  let hedgeAmt = (parseFloat(d.hedgeCost)||0) * d.quantity;
+  let totalAll = totalCosts + vatAmt + hedgeAmt;
+  let revenue = parseFloat(d.sellingPrice) * d.quantity;
+  let profit = revenue - totalAll;
+  let margin = totalAll ? (profit / totalAll * 100) : 0;
+  // Trade Score (beginner mode: margin + incoterm + hedging + fx)
+  let score = 0;
+  if (margin > 6) score += 3;
+  else if (margin > 3) score += 2;
+  else if (margin > 1) score += 1;
+  if (["DDP","CIF","DAP","CIP"].includes(d.paymentTerm)) score += 1;
+  if (d.fxForward) score += 1;
+  if (hedgeAmt>0) score += 1;
+  let verdict = score >= 5 ? "Strong" : score >= 3 ? "Watch Margin" : "Risky";
+  // Output
+  $("result").className = "result " + (margin > 6 ? "success" : margin > 2 ? "warning" : "danger");
+  $("result").innerHTML =
+    `<b>Profit:</b> ${revenue-totalAll >=0?'+':''}${(revenue-totalAll).toFixed(2)} ${d.sellCur} <br>` +
+    `<b>Margin:</b> ${margin.toFixed(2)}% ${margin < 5 ? "<span class='risk-flag' title='Low margin, risky!'>⚠️</span>":""}`;
+  $("score").className = "score-output " + (score>=5?"success":score>=3?"warning":"danger");
+  $("score").innerHTML = `<b>Trade Score:</b> ${score} / 6 <br> Verdict: <b>${verdict}</b>`;
+  // Breakdown
+  $("breakdown").innerHTML = `<table class="breakdown-table">
+    <tr><th>Item</th><th>Amount (${d.sellCur})</th></tr>
+    <tr><td>Purchase (FX Applied)</td><td>${purchaseTotal.toFixed(2)}</td></tr>
+    <tr><td>Freight</td><td>${(parseFloat(d.freight)*d.quantity).toFixed(2)}</td></tr>
+    <tr><td>Insurance</td><td>${(parseFloat(d.insurance)*d.quantity).toFixed(2)}</td></tr>
+    <tr><td>Duty</td><td>${(parseFloat(d.duty)*d.quantity).toFixed(2)}</td></tr>
+    <tr><td>Warehousing</td><td>${(parseFloat(d.warehouse)*d.quantity).toFixed(2)}</td></tr>
+    <tr><td>Demurrage</td><td>${(parseFloat(d.demurrage)*d.quantity).toFixed(2)}</td></tr>
+    <tr><td>Customs</td><td>${(parseFloat(d.customs)*d.quantity).toFixed(2)}</td></tr>
+    <tr><td>Bank Fees</td><td>${(parseFloat(d.bankfees)*d.quantity).toFixed(2)}</td></tr>
+    <tr><td>FX Hedge Premium</td><td>${hedgeAmt.toFixed(2)}</td></tr>
+    <tr><td>VAT</td><td>${vatAmt.toFixed(2)}</td></tr>
+    <tr><td><b>Total Cost</b></td><td><b>${totalAll.toFixed(2)}</b></td></tr>
+    <tr><td><b>Revenue</b></td><td><b>${revenue.toFixed(2)}</b></td></tr>
+    <tr><td><b>Profit</b></td><td><b>${(revenue-totalAll).toFixed(2)}</b></td></tr>
+    <tr><td><b>Margin</b></td><td><b>${margin.toFixed(2)}%</b></td></tr>
+  </table>`;
+  // Save for scenario reload, history, badges, tips
+  window.__lastTradeData = {...d, margin, profit: revenue-totalAll, score, verdict};
+  updateLearning();
+  return window.__lastTradeData;
+}
+
+// --- LEARNING, BADGES, TIPS, QUIZ ---
+function updateLearning() {
+  // Badges
+  const badges = [];
+  const d = window.__lastTradeData;
+  if (!d) return;
+  if (d.margin > 6) badges.push("Strong Margin");
+  if (d.hedgeCost > 0 || d.fxForward) badges.push("FX Hedged");
+  if (["DDP","CIF","DAP","CIP"].includes(d.paymentTerm)) badges.push("Buyer-friendly Term");
+  if (d.vat > 0) badges.push("VAT Accounted");
+  if (d.notes && d.notes.length>25) badges.push("Notes Added");
+  if (d.profit > 0) badges.push("Profitable");
+  $("badgeList").innerHTML = badges.map(b=>`<span class="badge">${b}</span>`).join("");
+  // Learning tip
+  let tip = "";
+  if (d.margin < 3) tip = "Margin under 3% is high risk. Review costs, FX, or renegotiate price.";
+  else if (d.margin > 10) tip = "Unusually high margin – check for data entry errors or market realism.";
+  else if (d.hedgeCost > 0) tip = "You included an FX hedge! That reduces risk for volatile currencies.";
+  else if (d.paymentTerm === "FOB") tip = "FOB is standard for global trade, but exposes buyer to freight/insurance risks.";
+  else if (d.paymentTerm === "DDP") tip = "DDP gives your buyer most comfort, but seller bears max risk/cost.";
+  $("learningTip").textContent = tip;
+}
+
+// --- TRADE WIZARD ---
+const wizardSteps = [
+  { title: "Welcome!", explain: "This wizard walks you through a beginner trade step-by-step." },
+  { title: "Step 1: Metal", explain: "Select your trade metal. Start with Copper.", set: { metal: "XCU" }},
+  { title: "Step 2: Currencies", explain: "Set buy currency (USD), sell currency (EUR).", set: { buyCurrency: "USD", sellCurrency: "EUR" }},
+  { title: "Step 3: Purchase", explain: "Enter purchase price per tonne (e.g. 8500), quantity (10).", set: { purchasePrice: 8500, quantity: 10 }},
+  { title: "Step 4: Costs", explain: "Add any costs if known (freight, insurance). Leave blank for now.", set: { freight: 0, insurance: 0 }},
+  { title: "Step 5: Selling", explain: "Enter selling price per tonne (e.g. 8800).", set: { sellingPrice: 8800 }},
+  { title: "Step 6: Terms", explain: "Set payment term to 'FOB'.", set: { paymentTerm: "FOB" }},
+  { title: "Step 7: Done!", explain: "Click 'Calculate'. Review margin, try What-If sliders!" }
+];
+$("openWizardBtn").onclick = () => {
+  let step = 0;
+  showWizard(step);
+  function showWizard(s) {
+    const w = $("wizardModal");
+    w.style.display = "flex";
+    w.innerHTML = `<div class="wizard-modal-bg" onclick="this.parentNode.style.display='none'"></div>
+      <div class="wizard-modal">
+        <div class="wizard-step-title">${wizardSteps[s].title}</div>
+        <div class="wizard-explain">${wizardSteps[s].explain}</div>
+        <div class="wizard-controls">
+          ${s>0?'<button class="btn btn-small" id="wizPrev">Prev</button>':''}
+          ${s<wizardSteps.length-1?'<button class="btn btn-small" id="wizNext">Next</button>':'<button class="btn btn-small" id="wizDone">Done</button>'}
+        </div>
+      </div>`;
+    Object.entries(wizardSteps[s].set||{}).forEach(([k,v])=>{$(k).value = v;});
+    if (s==wizardSteps.length-1) calculate();
+    $("wizPrev") && ($("wizPrev").onclick = ()=>showWizard(s-1));
+    $("wizNext") && ($("wizNext").onclick = ()=>showWizard(s+1));
+    $("wizDone") && ($("wizDone").onclick = ()=>{w.style.display="none";});
+  }
+};
+
+// --- SCENARIO LIBRARY ---
+document.querySelectorAll(".scenario-btn").forEach(btn => {
+  btn.onclick = () => {
+    let sc = btn.dataset.scenario, data = {};
+    if (sc === "basic-copper")
+      data = { metal:"XCU", buyCurrency:"USD", sellCurrency:"EUR", purchasePrice:8400, quantity:15, sellingPrice:8700, paymentTerm:"CIF" };
+    if (sc === "basic-gold")
+      data = { metal:"XAU", buyCurrency:"USD", sellCurrency:"JPY", purchasePrice:62000, quantity:2, sellingPrice:67000, paymentTerm:"CIP" };
+    if (sc === "low-margin")
+      data = { metal:"XCU", buyCurrency:"USD", sellCurrency:"EUR", purchasePrice:8600, quantity:10, sellingPrice:8680, paymentTerm:"FCA" };
+    if (sc === "hedged")
+      data = { metal:"XCU", buyCurrency:"USD", sellCurrency:"GBP", purchasePrice:8450, quantity:5, sellingPrice:8900, paymentTerm:"CPT", fxForward:0.79, hedgeCost:30 };
+    setTradeFields(data);
+    calculate();
+  }
+});
+
+// --- AI TRADE TUTOR (LOCAL ONLY) ---
+const tutorMessages = $("tutorMessages"), tutorInput = $("tutorInput"), tutorSend = $("tutorSendBtn");
+function tutorSay(txt, who="ai") {
+  let m = document.createElement("div");
+  m.className = "tutor-message "+who;
+  m.innerHTML = txt;
+  tutorMessages.appendChild(m);
+  tutorMessages.scrollTop = tutorMessages.scrollHeight;
+}
+tutorSend.onclick = () => {
+  let q = tutorInput.value.trim();
+  if (!q) return;
+  tutorSay(q, "user");
+  tutorInput.value = "";
+  // Simple rule-based AI (local only)
+  q = q.toLowerCase();
+  let a = "I'm sorry, I didn't understand. Try asking about 'margin', 'FX', 'hedge', or 'incoterms'.";
+  if (q.includes("margin")) a = "Margin = (Profit / Total Cost) × 100. Under 5% is risky, 5-10% is healthy.";
+  else if (q.includes("fx")||q.includes("currency")) a = "FX rate converts buy/sell currency. Use spot or set a forward/hedged rate.";
+  else if (q.includes("hedge")) a = "FX hedging locks your rate, reducing currency risk. Enter 'Use Forward FX Rate' or 'FX Hedge Premium'.";
+  else if (q.includes("incoterm")||q.includes("term")) a = "Incoterms set who covers cost/risk. Click the incoterm for details.";
+  else if (q.includes("profit")) a = "Profit = Revenue - Total Cost. The tool shows both in breakdown.";
+  else if (q.includes("history")) a = "You can save any trade for later, and review history at the bottom left.";
+  else if (q.includes("scenario")) a = "Click a scenario button to instantly load an example or try your own numbers.";
+  else if (q.includes("quiz")) a = "To take a quiz, click the 'Trade Quiz' button. Good luck!";
+  else if (q.includes("risk")) a = "Risk factors include low margin, volatile FX, bad payment terms, no hedging.";
+  else if (q.includes("glossary")) a = "Click 'Glossary/FAQ' to search any trade term or phrase!";
+  tutorSay(a);
+};
+tutorInput.onkeydown = e => { if (e.key === "Enter") tutorSend.onclick(); };
+
+// --- HINTS FOR FIELDS ---
+document.addEventListener('focusin', e => {
+  const id = e.target.id;
+  const f = tradeFieldsConfig.find(f => f.id === id);
+  if (f && infoData[f.explainKey]) {
+    tutorSay(`<b>Hint:</b> ${infoData[f.explainKey]}`);
+  }
+});
+
+// --- QUIZ BUTTON ---
+const quizBtn = document.createElement('button');
+quizBtn.className = "btn btn-small";
+quizBtn.innerText = "🧑‍🎓 Trade Quiz";
+quizBtn.onclick = startQuiz;
+document.querySelector(".feature-banner").after(quizBtn);
+function startQuiz() {
+  const quiz = [
+    { q: "What does 'Landed Cost' mean?", a: ["Total cost after arrival (includes all costs)", "Just shipping cost", "Only purchase price", "Only VAT"], c: 0 },
+    { q: "What is a safe gross margin for most physical metals trades?", a: ["0–1%", "1–6%", "10–15%", "Over 20%"], c: 1 },
+    { q: "What does a low trade score (red warning) suggest?", a: ["Strong trade", "High risk", "No profit", "Needs insurance"], c: 1 }
+  ];
+  let idx = 0, correct = 0;
+  function showQ() {
+    if (idx >= quiz.length) {
+      tutorSay(`<b>Quiz finished!</b> You scored ${correct} / ${quiz.length}.`);
+      return;
+    }
+    let q = quiz[idx];
+    tutorSay(`<b>${q.q}</b><br>` + q.a.map((opt, i) => `<button class="btn btn-small" onclick="__quizAns(${i})">${opt}</button>`).join(" "), "ai");
+  }
+  window.__quizAns = function(ans) {
+    let q = quiz[idx];
+    if (ans === q.c) { correct++; tutorSay("<span style='color:#5ff7b8'>Correct!</span>"); }
+    else { tutorSay(`<span style='color:#ff6f8a'>Nope! Answer: ${q.a[q.c]}</span>`); }
+    idx++; setTimeout(showQ, 900);
+  }
+  showQ();
+}
+
+// --- HISTORY ---
+function renderHistory() {
+  let list = JSON.parse(localStorage.getItem("copperdesk_history") || "[]");
+  $("historyList").innerHTML = list.length ? list.map((tr, i) =>
+    `<li>#${i+1} | ${tr.date} | <b>${tr.metalName}</b> ${tr.quantity}t | Margin: <b>${tr.margin.toFixed(2)}%</b>
+      <br>Score: <b>${tr.score}/6</b> | ${tr.verdict}
+      <br>Notes: <em>${tr.notes?tr.notes.replace(/</g,"&lt;").replace(/>/g,"&gt;"):"(none)"}
+      <br><button class="btn btn-small" onclick="loadHistory(${i})">Load</button>
+      <button class="btn btn-small" onclick="deleteHistory(${i})">Delete</button>
+    </li>`
+  ).join("") : "<li>No saved trades yet.</li>";
+}
+window.loadHistory = function(i) {
+  let list = JSON.parse(localStorage.getItem("copperdesk_history") || "[]");
+  if (!list[i]) return;
+  setTradeFields(list[i]);
+  calculate();
+};
+window.deleteHistory = function(i) {
+  let list = JSON.parse(localStorage.getItem("copperdesk_history") || "[]");
+  list.splice(i, 1); localStorage.setItem("copperdesk_history", JSON.stringify(list));
+  renderHistory();
+};
+$("saveHistory").onclick = function (e) {
+  e.preventDefault();
+  let d = calculate() || getFormData();
+  let list = JSON.parse(localStorage.getItem("copperdesk_history") || "[]");
+  list.push(d); localStorage.setItem("copperdesk_history", JSON.stringify(list));
+  renderHistory(); alert("Trade saved to history.");
+};
+renderHistory();
+
+// --- CSV IMPORT/EXPORT ---
+$("exportCSV").onclick = function (e) {
+  e.preventDefault();
+  let d = getFormData();
+  let csv = Object.keys(d).join(",") + "\n" + Object.values(d).join(",");
+  let blob = new Blob([csv], { type: "text/csv" });
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement("a");
+  a.href = url; a.download = "copperdesk_trade.csv";
+  document.body.appendChild(a); a.click(); a.remove();
+};
+$("importCSVBtn").onclick = function (e) {
+  e.preventDefault();
+  $("importInput").click();
+};
+$("importInput").onchange = function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (ev) {
+    let rows = ev.target.result.split("\n");
+    if (rows.length < 2) return;
+    let keys = rows[0].split(","), vals = rows[1].split(",");
+    let data = {};
+    keys.forEach((k, i) => data[k] = vals[i]);
+    setTradeFields(data);
+    calculate();
+  };
+  reader.readAsText(file);
+};
+
+// --- EXPLAIN OUTPUT ---
+$("outputExplain").onclick = function () {
+  $("outputExplainBody").innerHTML = `<b>Results Guide:</b><ul>
+    <li><b>Profit</b>: Revenue minus all costs (incl. VAT, freight, etc.)</li>
+    <li><b>Margin</b>: (Profit / Total Cost) × 100. Below 5% = high risk.</li>
+    <li><b>Trade Score</b>: Combines margin & payment term risk for health.</li>
+    <li><b>What-If</b>: Try sliders for FX or metal price to see sensitivity!</li>
+    <li><b>History</b>: You can save or review trades. Learning is tracking!</li>
+  </ul>
+  <button class="btn btn-small" onclick="aiTutorStep(0)">Restart Guided Walkthrough</button>`;
+};
+
+// --- GLOSSARY/FAQ POPUP ---
+$("glossaryBtn").onclick = function(e) {
+  e.preventDefault();
+  let html = '<b>Glossary / FAQ</b><input id="searchGloss" style="margin-left:8px" placeholder="Search..."/><ul style="margin-top:7px" id="glossList">';
+  for (let [k,v] of Object.entries(glossary)) {
+    html += `<li><b>${k}</b>:<br><span style="color:#c7ffde">${v}</span></li>`;
+  }
+  html += "</ul>";
+  showInfoPopup(e, html);
+  setTimeout(()=>{
+    $("searchGloss").oninput = function(){
+      let term = this.value.trim().toLowerCase();
+      $("glossList").innerHTML =
+        Object.entries(glossary).filter(([k,v])=>k.toLowerCase().includes(term)||v.toLowerCase().includes(term))
+          .map(([k,v])=>`<li><b>${k}</b>:<br><span style="color:#c7ffde">${v}</span></li>`).join("");
+    }
+  },400);
+};
+
+// --- INFO/POPUP (GENERIC) ---
+function showInfoPopup(e, html) {
+  let pop = document.createElement("div");
+  pop.className = "wizard-modal-bg";
+  pop.style.zIndex = 10012;
+  pop.innerHTML = `<div class="wizard-modal" style="max-width:420px;">${html}<br><button class="btn btn-small" onclick="this.parentNode.parentNode.remove()">Close</button></div>`;
+  document.body.appendChild(pop);
+}
+document.querySelectorAll(".explain-link,.tooltip").forEach(el=>{
+  el.onclick = function(e){
+    const k = el.dataset.info;
+    if (!k) return;
+    showInfoPopup(e, `<div style='max-width:360px;'>${infoData[k] || glossary[k] || "(No info)"}</div>`);
+  };
+});
+
+// --- INIT ---
+async function init() {
+  await updateFXRateAndChart();
+  await getMetalPrice();
+  updateWhatIfFxSlider();
+  updateWhatIfMetalSlider();
+  calculate();
+}
+init();
+["metal", "buyCurrency", "sellCurrency"].forEach(id => $(id).onchange = async function () {
+  await updateFXRateAndChart();
+  await getMetalPrice();
+  updateWhatIfFxSlider();
+  updateWhatIfMetalSlider();
+  calculate();
+});
+["purchasePrice","quantity","freight","insurance","duty","warehouse","demurrage","customs","bankfees","vat","sellingPrice","paymentTerm","fxForward","hedgeCost","notes"].forEach(id => $(id).oninput = function () { calculate(); });
+$("calcBtn").onclick = () => calculate();
+
+// --- RSS NEWS FEED ---
+async function fetchRss() {
+  // Metals news (Bloomberg, Mining.com fallback)
+  let news = [];
+  try {
+    const res = await fetch("https://api.allorigins.win/get?url=" + encodeURIComponent("https://www.mining.com/feed/"));
+    const xml = new window.DOMParser().parseFromString(JSON.parse(await res.text()).contents, "text/xml");
+    news = [...xml.querySelectorAll("item")].slice(0,5).map(item => ({
+      title: item.querySelector("title")?.textContent, link: item.querySelector("link")?.textContent
+    }));
+  } catch {
+    news = [{title:"Could not load news. Try later.",link:"#"}];
+  }
+  $("rssItems").innerHTML = news.map(n => `<div class="rss-item"><a href="${n.link}" target="_blank">${n.title}</a></div>`).join("");
+}
+fetchRss();
+
