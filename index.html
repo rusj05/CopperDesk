@@ -159,9 +159,10 @@
   <div id="infoPopups"></div>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // --- Currency Symbol Map ---
+    // ---- FULL COPPERDESK JS STARTS HERE ----
+
+    // Currency Symbol Map and all static data (copy as in your code)
     const currencySymbols = { USD: "$", EUR: "€", DKK: "kr", GBP: "£", CAD: "$", NOK: "kr", SEK: "kr", JPY: "¥" };
-    // --- Incoterms Definitions ---
     const incoterms = [
       { value: "FOB", label: "FOB (Free On Board)", desc: "Seller delivers goods on board vessel at port of shipment. Buyer bears all costs and risks after loading." },
       { value: "CIF", label: "CIF (Cost, Insurance, Freight)", desc: "Seller pays for cost, insurance, freight to named port. Risk passes to buyer when goods loaded on vessel." },
@@ -178,7 +179,6 @@
       { value: "LC60", label: "Letter of Credit (60 Days)", desc: "Payment via letter of credit, payable 60 days after shipment/documents." },
       { value: "LC90", label: "Letter of Credit (90 Days)", desc: "Payment via letter of credit, payable 90 days after shipment/documents." }
     ];
-    // --- Info explanations ---
     const infoData = {
       general: "CopperDesk is a professional tool for physical copper/gold traders: calculate landed cost, profit, risk, FX, and explore what-if scenarios. Sensitivity, notes, history, export/import, glossary, news.",
       howitworks: "<b>How it works:</b><br>1. Enter trade details.<br>2. Live gold (XAU) or reference copper (XCU) price.<br>3. FX from live feed.<br>4. Sensitivity/what-if for FX, metal price.<br>5. Save/export your scenario. <br>6. Glossary: click for definitions anywhere.",
@@ -205,7 +205,6 @@
       margin: "<b>Margin</b> = (Profit / Total Cost) × 100.<br>Below 5% = high risk.",
       tradescore: "<b>Trade Score</b>: Combines margin and payment term risk.",
     };
-    // --- Glossary Data ---
     const glossary = {
       "Landed Cost": "The total cost of a product once it has arrived at a buyer’s door. Includes purchase, freight, insurance, duties, warehouse, etc.",
       "FX": "Foreign exchange rate. The value of one currency for the purpose of conversion to another.",
@@ -224,26 +223,54 @@
       "Industry Margin": "Typical gross margin for physical metals trades, often 1-6%. <br>(Consult your compliance team for best practice!)"
     };
 
-    // --- Selectors ---
-    const buyCurrency = document.getElementById("buyCurrency"), sellCurrency = document.getElementById("sellCurrency");
-    const fxRateDisplay = document.getElementById("fxRate"), fxChartCanvas = document.getElementById("fxChart").getContext("2d"), metalSelect = document.getElementById("metal");
-    const paymentTerm = document.getElementById("paymentTerm"), incotermDesc = document.getElementById("incotermDesc"), infoPopups = document.getElementById("infoPopups");
-    const purchaseSymbol = document.getElementById("purchaseSymbol"), freightSymbol = document.getElementById("freightSymbol"), insuranceSymbol = document.getElementById("insuranceSymbol");
-    const dutySymbol = document.getElementById("dutySymbol"), sellingSymbol = document.getElementById("sellingSymbol");
-    const fxSpinner = document.getElementById("fxSpinner"), metalSpinner = document.getElementById("metalSpinner"), fxApiError = document.getElementById("fxApiError"), metalApiError = document.getElementById("metalApiError");
-    const purchaseInput = document.getElementById("purchasePrice"), quantityInput = document.getElementById("quantity"), freightInput = document.getElementById("freight"), insuranceInput = document.getElementById("insurance"), dutyInput = document.getElementById("duty");
-    const sellingInput = document.getElementById("sellingPrice"), calcBtn = document.getElementById("calcBtn");
-    const warehouseInput = document.getElementById("warehouse"), demurrageInput = document.getElementById("demurrage"), customsInput = document.getElementById("customs"), bankfeesInput = document.getElementById("bankfees"), vatInput = document.getElementById("vat");
-    const fxForwardInput = document.getElementById("fxForward"), hedgeCostInput = document.getElementById("hedgeCost");
-    const notesInput = document.getElementById("notes");
-    const breakdownDiv = document.getElementById("breakdown"), resultDiv = document.getElementById("result"), scoreDiv = document.getElementById("score");
-    const exportCSVBtn = document.getElementById("exportCSV"), importCSVBtn = document.getElementById("importCSVBtn"), importInput = document.getElementById("importInput"), saveHistoryBtn = document.getElementById("saveHistory");
-    const fxSlider = document.getElementById("fxSlider"), fxSliderVal = document.getElementById("fxSliderVal");
-    const metalSlider = document.getElementById("metalSlider"), metalSliderVal = document.getElementById("metalSliderVal");
-    const historyList = document.getElementById("historyList");
-    const glossaryBtn = document.getElementById("glossaryBtn");
+    // --- Selectors
+    const buyCurrency = document.getElementById("buyCurrency"),
+      sellCurrency = document.getElementById("sellCurrency"),
+      fxRateDisplay = document.getElementById("fxRate"),
+      fxChartCanvas = document.getElementById("fxChart").getContext("2d"),
+      metalSelect = document.getElementById("metal"),
+      paymentTerm = document.getElementById("paymentTerm"),
+      incotermDesc = document.getElementById("incotermDesc"),
+      infoPopups = document.getElementById("infoPopups"),
+      purchaseSymbol = document.getElementById("purchaseSymbol"),
+      freightSymbol = document.getElementById("freightSymbol"),
+      insuranceSymbol = document.getElementById("insuranceSymbol"),
+      dutySymbol = document.getElementById("dutySymbol"),
+      sellingSymbol = document.getElementById("sellingSymbol"),
+      fxSpinner = document.getElementById("fxSpinner"),
+      metalSpinner = document.getElementById("metalSpinner"),
+      fxApiError = document.getElementById("fxApiError"),
+      metalApiError = document.getElementById("metalApiError"),
+      purchaseInput = document.getElementById("purchasePrice"),
+      quantityInput = document.getElementById("quantity"),
+      freightInput = document.getElementById("freight"),
+      insuranceInput = document.getElementById("insurance"),
+      dutyInput = document.getElementById("duty"),
+      sellingInput = document.getElementById("sellingPrice"),
+      calcBtn = document.getElementById("calcBtn"),
+      warehouseInput = document.getElementById("warehouse"),
+      demurrageInput = document.getElementById("demurrage"),
+      customsInput = document.getElementById("customs"),
+      bankfeesInput = document.getElementById("bankfees"),
+      vatInput = document.getElementById("vat"),
+      fxForwardInput = document.getElementById("fxForward"),
+      hedgeCostInput = document.getElementById("hedgeCost"),
+      notesInput = document.getElementById("notes"),
+      breakdownDiv = document.getElementById("breakdown"),
+      resultDiv = document.getElementById("result"),
+      scoreDiv = document.getElementById("score"),
+      exportCSVBtn = document.getElementById("exportCSV"),
+      importCSVBtn = document.getElementById("importCSVBtn"),
+      importInput = document.getElementById("importInput"),
+      saveHistoryBtn = document.getElementById("saveHistory"),
+      fxSlider = document.getElementById("fxSlider"),
+      fxSliderVal = document.getElementById("fxSliderVal"),
+      metalSlider = document.getElementById("metalSlider"),
+      metalSliderVal = document.getElementById("metalSliderVal"),
+      historyList = document.getElementById("historyList"),
+      glossaryBtn = document.getElementById("glossaryBtn");
 
-    // --- Currency options setup ---
+    // --- Currency options setup
     const currencies = ["USD", "EUR", "DKK", "GBP", "CAD", "NOK", "SEK", "JPY"];
     currencies.forEach(c => { buyCurrency.add(new Option(c, c)); sellCurrency.add(new Option(c, c)); });
     buyCurrency.value = "USD"; sellCurrency.value = "DKK";
@@ -258,7 +285,7 @@
     }
     paymentTerm.onchange = showIncotermDesc; showIncotermDesc();
 
-    // --- State ---
+    // --- State
     let fxRate = 1.0, fxChartInstance = null, lastFxDebounce, lastMetalDebounce, lastMetalPrice = 8600, lastMetalName = "Copper";
     function setInvalid(input, invalid) {
       if (invalid) { input.classList.add("invalid"); input.setAttribute("aria-invalid", "true"); }
@@ -299,15 +326,14 @@
           // Gold price live (per troy ounce) to USD/tonne
           const res = await fetch(`https://api.metals.live/v1/spot/gold`);
           const data = await res.json();
-          // metals.live returns [{gold: xxxx.xx}]
           const ouncePrice = Array.isArray(data) && typeof data[0]?.gold === "number" ? data[0].gold : null;
           if (!ouncePrice) throw new Error();
-          price = ouncePrice * 32150; // 1 metric tonne = 32,150 troy ounces
+          price = ouncePrice * 32150;
           display = `Gold Price: ${price.toLocaleString(undefined,{maximumFractionDigits:0})} USD/t`;
           lastMetalName = "Gold";
           showApiError(metalApiError, "");
         } else if (metal === "XCU") {
-          price = 8600; // static
+          price = 8600;
           display = "Copper Price: 8,600.00 USD/t (reference)";
           apiNote = "Live copper price is unavailable on free APIs. For real LME data, contact support.";
           lastMetalName = "Copper";
@@ -348,7 +374,7 @@
         if (fxChartInstance) fxChartInstance.destroy();
         fxChartInstance = new Chart(fxChartCanvas, {
           type: 'line',
-          data: { labels: labels, datasets: [{ label: `${from} → ${to}`, data: values, borderColor: '#00ff99', borderWidth: 2, fill: false }] },
+          data: { labels: labels, datasets: [{ label: `${from} → ${to}`, data: values, borderWidth: 2, fill: false }] },
           options: {
             responsive: true, maintainAspectRatio: true, aspectRatio: getAspectRatio(),
             plugins: { legend: { labels: { color: '#fff' } } },
@@ -366,8 +392,6 @@
       }
     }
     window.addEventListener('resize', () => { if (fxChartInstance) { fxChartInstance.options.aspectRatio = getAspectRatio(); fxChartInstance.resize(); } });
-
-    // ...PART 2 CONTINUED...
 
     // --- Validation
     function validateInputs() {
@@ -417,9 +441,7 @@
         return;
       }
       const d = getFormData(dataOverride);
-      // Use forward FX if set
       let rate = d.fxForward && d.fxForward > 0 ? d.fxForward : d.fx;
-      // Landed cost per tonne (converted)
       let baseCost = d.purchasePrice * rate +
         d.freight + d.insurance + d.duty +
         d.warehouse + d.demurrage + d.customs + d.bankfees + d.hedgeCost;
@@ -430,7 +452,6 @@
       let profit = totalRevenue - totalCost;
       let margin = totalCost ? (profit / totalCost) * 100 : 0;
 
-      // Score logic
       let score = 0;
       if (margin > 20) score += 3;
       else if (margin > 10) score += 2;
@@ -445,7 +466,6 @@
       else if (score >= 3) { verdict = "🟡 Moderate Trade"; color = "warning";}
       else { verdict = "🔴 Risky Trade"; color = "danger"; }
 
-      // Industry margin info
       let industryMarginMsg = "";
       if (margin < 1) industryMarginMsg = '<span style="color:#ffe066;font-size:0.98em;">(Warning: Most physical trades are 1-6% gross margin)</span>';
       else if (margin < 6) industryMarginMsg = '<span style="color:#95ffcc;font-size:0.98em;">(Within normal range for LME/trade deals)</span>';
@@ -551,7 +571,6 @@
       reader.onload = function(evt) {
         const lines = evt.target.result.split('\n').map(l=>l.replace(/^"|"$/g,'').split('","'));
         const obj = Object.fromEntries(lines);
-        // Try to fill fields
         try {
           purchaseInput.value = obj["Purchase Price"]||"";
           quantityInput.value = obj["Quantity"]||"";
@@ -640,7 +659,6 @@
 
     // --- RSS FEED (metals news, free public RSS) ---
     async function loadRssFeed() {
-      // Use metalsmine (or kitco) headlines via rss2json proxy (since CORS on RSS)
       try {
         const res = await fetch("https://api.rss2json.com/v1/api.json?rss_url=https://www.kitco.com/rss/news/");
         const data = await res.json();
@@ -660,5 +678,9 @@
     debounceMetal();
     setTimeout(() => { updateWhatIfFxSlider(); updateWhatIfMetalSlider(); }, 900);
 
-    // On page load, restore glossary popup
     setTimeout(addPopupListeners, 200);
+
+    // ---- END FULL JS ----
+  </script>
+</body>
+</html>
